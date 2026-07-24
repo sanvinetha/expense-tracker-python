@@ -1,0 +1,7 @@
+Expense Summary:
+
+1. Groceries - 100 [Food]
+2. pens - 50.0 [stationary] (24th July 2026)
+3. bus - 35.0 [travel] (24th July 2026)
+
+Total expenses: 185.00
