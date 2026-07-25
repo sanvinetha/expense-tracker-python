@@ -185,31 +185,8 @@ def render_app():
     inc_df = pd.DataFrame(st.session_state["incomes"])
     current_page = st.session_state["active_page"]
 
-    # ================= HOME PAGE SLIDE (INTERACTIVE FEATURE GRID) =================
+    # ================= HOME PAGE SLIDE (FEATURES FIRST, FINANCIAL SUMMARY AT BOTTOM) =================
     if current_page == "HOME":
-        st.subheader(f"💰 Financial Summary Overview ({curr})")
-        
-        total_exp = df["amount"].sum() if not df.empty else 0.0
-        total_inc = inc_df["amount"].sum() if not inc_df.empty else 0.0
-        net_sav = total_inc - total_exp
-        
-        health_score = 100
-        if total_inc > 0:
-            savings_rate = (net_sav / total_inc) * 100
-            health_score = max(0, min(100, int(savings_rate * 2)))
-        elif total_exp > 0:
-            health_score = 40
-            
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total Expenses", fmt_amt(total_exp))
-        c2.metric("Total Income", fmt_amt(total_inc))
-        c3.metric("Net Savings", fmt_amt(net_sav))
-        c4.metric("Financial Health Score", f"{health_score} / 100")
-        
-        st.markdown("---")
-        st.subheader("📌 Features Direct Access Grid — Click Option to Open Slide")
-        st.write("Select any option below to open its dedicated slide view:")
-
         features_grid = [
             ("💰 Total Expenses", "View full overview & metrics"),
             ("💡 Save Money", "Cut unnecessary expenses & save 30%"),
@@ -228,7 +205,7 @@ def render_app():
             ("📥 Export Summary", "Download CSV and JSON summary")
         ]
 
-        # 3 COLUMNS GRID OF FEATURE CARDS
+        # 1. FEATURES GRID AT THE TOP
         for row_idx in range(0, len(features_grid), 3):
             cols = st.columns(3)
             for col_idx in range(3):
@@ -242,6 +219,28 @@ def render_app():
                             set_page(title)
                             st.rerun()
                         st.markdown("<br>", unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # 2. FINANCIAL SUMMARY OVERVIEW AT THE BOTTOM OF THE SLIDE
+        st.subheader(f"💰 Financial Summary Overview ({curr})")
+        
+        total_exp = df["amount"].sum() if not df.empty else 0.0
+        total_inc = inc_df["amount"].sum() if not inc_df.empty else 0.0
+        net_sav = total_inc - total_exp
+        
+        health_score = 100
+        if total_inc > 0:
+            savings_rate = (net_sav / total_inc) * 100
+            health_score = max(0, min(100, int(savings_rate * 2)))
+        elif total_exp > 0:
+            health_score = 40
+            
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Expenses", fmt_amt(total_exp))
+        c2.metric("Total Income", fmt_amt(total_inc))
+        c3.metric("Net Savings", fmt_amt(net_sav))
+        c4.metric("Financial Health Score", f"{health_score} / 100")
 
     # ================= FEATURE SLIDE: TOTAL EXPENSES =================
     elif current_page == "💰 Total Expenses":
