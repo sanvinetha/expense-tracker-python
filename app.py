@@ -36,7 +36,7 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
     .author-badge {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 600;
         color: #38bdf8;
         background: rgba(56, 189, 248, 0.1);
@@ -45,7 +45,7 @@ st.markdown("""
         border: 1px solid rgba(56, 189, 248, 0.3);
         display: inline-block;
         white-space: nowrap !important;
-        margin-bottom: 0.4rem;
+        margin-top: 0.3rem;
     }
     .savings-card {
         background: rgba(16, 185, 129, 0.12);
@@ -200,25 +200,17 @@ def render_login_page():
 def render_app():
     curr = st.session_state.get("currency_symbol", "₹")
     
-    # TOP HEADER BAR WITH ONE-LINE DEVELOPER CREDIT BADGE AT TOP RIGHT
-    head_col1, head_col2 = st.columns([1.0, 3.0])
+    # TOP HEADER BAR - ONE LINE CLEAN DEVELOPER CREDIT
+    head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**!", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! &nbsp; <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>", unsafe_allow_html=True)
     with head_col2:
-        st.markdown("""
-            <div style='text-align: right;'>
-                <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>
-            </div>
-        """, unsafe_allow_html=True)
+        curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
+        st.session_state["currency_symbol"] = curr_choice.split()[0]
         
-        sub_c1, sub_c2 = st.columns([2, 1])
-        with sub_c2:
-            curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
-            st.session_state["currency_symbol"] = curr_choice.split()[0]
-        with sub_c1:
-            if st.button("🚪 Sign Out", key="top_logout", use_container_width=True):
-                st.session_state["show_logout_confirm"] = True
+        if st.button("🚪 Sign Out", key="top_logout", use_container_width=True):
+            st.session_state["show_logout_confirm"] = True
 
     # CONFIRM SIGN OUT MODAL
     if st.session_state["show_logout_confirm"]:
