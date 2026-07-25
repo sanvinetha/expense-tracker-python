@@ -69,13 +69,20 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# URL PERSISTENCE TO PREVENT RETURNING TO SIGN-IN ON RELOAD / REFRESH
+query_params = st.query_params
+
+default_logged_in = True if query_params.get("logged_in") == "true" else False
+default_user_email = query_params.get("user_email", "user@gmail.com") if default_logged_in else ""
+default_page = query_params.get("page", "HOME")
+
 # Initialize Session State Data
 if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
+    st.session_state["logged_in"] = default_logged_in
 if "user_email" not in st.session_state:
-    st.session_state["user_email"] = ""
+    st.session_state["user_email"] = default_user_email
 if "active_page" not in st.session_state:
-    st.session_state["active_page"] = "HOME"
+    st.session_state["active_page"] = default_page
 if "currency_symbol" not in st.session_state:
     st.session_state["currency_symbol"] = "₹"
 if "expenses" not in st.session_state:
@@ -99,8 +106,6 @@ if "eliminated_savings" not in st.session_state:
     st.session_state["eliminated_savings"] = 0.0
 if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
-
-# User Passwords Store (Email ID -> Registered Password)
 if "user_passwords" not in st.session_state:
     st.session_state["user_passwords"] = {}
 
@@ -108,6 +113,7 @@ NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other
 
 def set_page(page_name):
     st.session_state["active_page"] = page_name
+    st.query_params["page"] = page_name
 
 def fmt_amt(amt):
     curr = st.session_state.get("currency_symbol", "₹")
@@ -143,25 +149,29 @@ def render_login_page():
                 else:
                     user_store = st.session_state["user_passwords"]
                     
-                    # IF EMAIL NOT REGISTRATION STORED YET -> REGISTER & LOG IN
                     if identity not in user_store:
                         user_store[identity] = password
                         st.session_state["logged_in"] = True
                         st.session_state["user_email"] = identity
                         st.session_state["show_logout_confirm"] = False
-                        st.success("✅ Account registered & signed in!")
+                        st.query_params["logged_in"] = "true"
+                        st.query_params["user_email"] = identity
+                        st.query_params["page"] = "HOME"
+                        st.success("✅ Signed in!")
                         st.rerun()
                     else:
-                        # VERIFY REGISTRATION PASSWORD
                         stored_password = user_store[identity]
                         if password == stored_password:
                             st.session_state["logged_in"] = True
                             st.session_state["user_email"] = identity
                             st.session_state["show_logout_confirm"] = False
-                            st.success("✅ Password verified! Signed in.")
+                            st.query_params["logged_in"] = "true"
+                            st.query_params["user_email"] = identity
+                            st.query_params["page"] = "HOME"
+                            st.success("✅ Signed in!")
                             st.rerun()
                         else:
-                            st.error(f"❌ Incorrect Password for {identity}! Please enter your correct password.")
+                            st.error(f"❌ Incorrect Password for {identity}!")
 
         st.markdown("<div style='text-align: center; margin: 1.5rem 0; color: #94a3b8;'>─── OR SIGN IN WITH GOOGLE ───</div>", unsafe_allow_html=True)
         
@@ -169,6 +179,9 @@ def render_login_page():
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "google_user@gmail.com"
             st.session_state["show_logout_confirm"] = False
+            st.query_params["logged_in"] = "true"
+            st.query_params["user_email"] = "google_user@gmail.com"
+            st.query_params["page"] = "HOME"
             st.rerun()
 
 # ==================== MAIN APPLICATION ==================== #
@@ -195,6 +208,7 @@ def render_app():
             if st.button("✅ Yes, Sign Out", key="confirm_logout_yes", use_container_width=True):
                 st.session_state["logged_in"] = False
                 st.session_state["show_logout_confirm"] = False
+                st.query_params.clear()
                 st.rerun()
         with btn_c2:
             if st.button("❌ Cancel", key="confirm_logout_no", use_container_width=True):
@@ -207,7 +221,7 @@ def render_app():
     inc_df = pd.DataFrame(st.session_state["incomes"])
     current_page = st.session_state["active_page"]
 
-    # ================= HOME PAGE SLIDE (FEATURES FIRST WITHOUT DESCRIPTIONS, FINANCIAL SUMMARY AT BOTTOM) =================
+    # ================= HOME PAGE SLIDE =================
     if current_page == "HOME":
         features_list = [
             "💰 Total Expenses",
@@ -227,7 +241,7 @@ def render_app():
             "📥 Export Summary"
         ]
 
-        # 1. CLEAN FEATURES BUTTON GRID AT THE TOP (NO DESCRIPTIONS BELOW BUTTONS)
+        # 1. CLEAN FEATURES BUTTON GRID AT THE TOP
         for row_idx in range(0, len(features_list), 3):
             cols = st.columns(3)
             for col_idx in range(3):
@@ -241,7 +255,7 @@ def render_app():
 
         st.markdown("---")
 
-        # 2. FINANCIAL SUMMARY OVERVIEW AT THE BOTTOM OF THE SLIDE
+        # 2. FINANCIAL SUMMARY OVERVIEW AT THE BOTTOM
         st.subheader(f"💰 Financial Summary Overview ({curr})")
         
         total_exp = df["amount"].sum() if not df.empty else 0.0
