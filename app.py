@@ -46,20 +46,23 @@ st.markdown("""
         display: inline-block;
         white-space: nowrap !important;
     }
-    .view-profile-btn {
-        background: #1d4ed8 !important;
-        color: #ffffff !important;
+    .github-link {
+        color: #f8fafc !important;
+        background: rgba(30, 41, 59, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
         text-decoration: none !important;
-        padding: 0.45rem 1.1rem !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        transition: background 0.2s ease !important;
+        font-weight: 600;
+        font-size: 0.85rem;
         display: inline-block;
+        margin: 0.3rem;
+        transition: all 0.2s ease;
     }
-    .view-profile-btn:hover {
-        background: #2563eb !important;
-        color: #ffffff !important;
+    .github-link:hover {
+        border-color: #3b82f6 !important;
+        color: #38bdf8 !important;
+        transform: translateY(-1px);
     }
     .savings-card {
         background: rgba(16, 185, 129, 0.12);
@@ -155,37 +158,11 @@ def render_top_left_back_arrow():
 def render_bottom_author_footer():
     st.markdown("---")
     st.markdown("""
-        <div style='text-align: center; margin-top: 1.5rem; margin-bottom: 2rem;'>
-            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>
-            
-            <div style='display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-top: 1.25rem;'>
-                <!-- Developer 1: Hemanth Reddy -->
-                <div style='background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);'>
-                    <div style='background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;'>H</div>
-                    <div style='text-align: left;'>
-                        <div style='font-weight: 700; color: #f8fafc; font-size: 0.95rem;'>Hemanth Reddy</div>
-                    </div>
-                    <a href='https://github.com/dudipalahemanthreddy2007-cloud?tab=repositories' target='_blank' class='view-profile-btn'>View profile</a>
-                </div>
-
-                <!-- Developer 2: Sanvi Netha -->
-                <div style='background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);'>
-                    <div style='background: linear-gradient(135deg, #e0a96d, #d97706); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;'>S</div>
-                    <div style='text-align: left;'>
-                        <div style='font-weight: 700; color: #f8fafc; font-size: 0.95rem;'>Sanvi Netha</div>
-                    </div>
-                    <a href='https://github.com/sanvinetha' target='_blank' class='view-profile-btn'>View profile</a>
-                </div>
-
-                <!-- Developer 3: Srivalli Kakkireni -->
-                <div style='background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3);'>
-                    <div style='background: linear-gradient(135deg, #10b981, #059669); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem;'>S</div>
-                    <div style='text-align: left;'>
-                        <div style='font-weight: 700; color: #f8fafc; font-size: 0.95rem;'>Srivalli Kakkireni</div>
-                    </div>
-                    <a href='https://github.com/srivallikakkireni75' target='_blank' class='view-profile-btn'>View profile</a>
-                </div>
-            </div>
+        <div style='text-align: center; margin-top: 1.5rem; margin-bottom: 1.5rem;'>
+            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span><br><br>
+            <a class='github-link' href='https://github.com/dudipalahemanthreddy2007-cloud?tab=repositories' target='_blank'>💻 Hemanth Reddy (GitHub)</a>
+            <a class='github-link' href='https://github.com/sanvinetha' target='_blank'>💻 Sanvi Netha (GitHub)</a>
+            <a class='github-link' href='https://github.com/srivallikakkireni75' target='_blank'>💻 Srivalli Kakkireni (GitHub)</a>
         </div>
     """, unsafe_allow_html=True)
 
@@ -339,7 +316,7 @@ def render_app():
         c3.metric("Net Savings", fmt_amt(net_sav))
         c4.metric("Financial Health Score", f"{health_score} / 100")
 
-        # 3. DEVELOPER CREDIT BADGE & 3 GITHUB PROFILE CARDS WITH BLUE VIEW PROFILE BUTTONS
+        # 3. DEVELOPER CREDIT BADGE & GITHUB LINKS AT TOTAL BOTTOM OF PAGE
         render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: TOTAL EXPENSES =================
@@ -611,7 +588,7 @@ def render_app():
             if category_filter != "ALL":
                 filtered_df = filtered_df[filtered_df["category"] == category_filter]
             if payment_filter != "ALL":
-                filtered_df = filtered_df[filtered_df["payment_method"] == payment_filter]
+                filtered_df = filtered_df[filtered_filter["payment_method"] == payment_filter]
                 
             st.write(f"Showing {len(filtered_df)} matching results:")
             filtered_df["amount"] = filtered_df["amount"].apply(lambda x: fmt_amt(x))
