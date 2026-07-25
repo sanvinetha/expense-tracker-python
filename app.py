@@ -4,10 +4,9 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import json
 
-# Page Configuration for Streamlit Cloud
+# Page Configuration for Streamlit Cloud - Clean Title Expense Tracker
 st.set_page_config(
     page_title="Expense Tracker",
-    page_icon="💰",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
