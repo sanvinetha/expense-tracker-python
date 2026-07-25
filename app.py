@@ -129,7 +129,7 @@ def render_login_page():
         st.write("Please enter your Email ID and Password to access your dashboard:")
         
         with st.form("email_login_form"):
-            identity = st.text_input("Email ID", placeholder="e.g. sanvinetha@gmail.com or user@example.com").strip()
+            identity = st.text_input("Email ID", placeholder="username@gmail.com").strip()
             password = st.text_input("Password", type="password", placeholder="Enter your password")
             submit_btn = st.form_submit_button("Sign In ➔", use_container_width=True)
             
@@ -447,7 +447,7 @@ def render_app():
         st.subheader(f"➕ Add New Expense Entry ({curr})")
         with st.form("add_expense_form_main"):
             col_a, col_b = st.columns(2)
-            title = col_a.text_input("Expense Title", placeholder="e.g. Supermarket Groceries")
+            title = col_a.text_input("Expense Title", placeholder="Groceries, Coffee, Rent...")
             amount = col_b.number_input(f"Amount ({curr})", min_value=1.0, step=10.0)
             
             col_c, col_d, col_e = st.columns(3)
