@@ -36,16 +36,15 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
     .author-badge {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: #38bdf8;
         background: rgba(56, 189, 248, 0.1);
-        padding: 0.35rem 0.85rem;
+        padding: 0.4rem 1.1rem;
         border-radius: 20px;
         border: 1px solid rgba(56, 189, 248, 0.3);
         display: inline-block;
         white-space: nowrap !important;
-        margin-top: 0.3rem;
     }
     .savings-card {
         background: rgba(16, 185, 129, 0.12);
@@ -138,6 +137,14 @@ def render_top_left_back_arrow():
             st.rerun()
     st.markdown("---")
 
+def render_bottom_author_footer():
+    st.markdown("---")
+    st.markdown("""
+        <div style='text-align: center; margin-top: 1.5rem; margin-bottom: 1.5rem;'>
+            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>
+        </div>
+    """, unsafe_allow_html=True)
+
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
@@ -200,11 +207,11 @@ def render_login_page():
 def render_app():
     curr = st.session_state.get("currency_symbol", "₹")
     
-    # TOP HEADER BAR - ONE LINE CLEAN DEVELOPER CREDIT
+    # TOP HEADER BAR
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! &nbsp; <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**!", unsafe_allow_html=True)
     with head_col2:
         curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
         st.session_state["currency_symbol"] = curr_choice.split()[0]
@@ -267,7 +274,7 @@ def render_app():
 
         st.markdown("---")
 
-        # 2. FINANCIAL SUMMARY OVERVIEW AT THE BOTTOM
+        # 2. FINANCIAL SUMMARY OVERVIEW IN MIDDLE/BOTTOM
         st.subheader(f"💰 Financial Summary Overview ({curr})")
         
         total_exp = df["amount"].sum() if not df.empty else 0.0
@@ -286,6 +293,9 @@ def render_app():
         c2.metric("Total Income", fmt_amt(total_inc))
         c3.metric("Net Savings", fmt_amt(net_sav))
         c4.metric("Financial Health Score", f"{health_score} / 100")
+
+        # 3. DEVELOPER CREDIT BADGE AT TOTAL BOTTOM OF PAGE (BELOW FINANCIAL SUMMARY)
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: TOTAL EXPENSES =================
     elif current_page == "💰 Total Expenses":
@@ -317,6 +327,7 @@ def render_app():
             st.dataframe(display_df.sort_values(by="date", ascending=False), use_container_width=True)
         else:
             st.info("💡 No expenses added yet.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: SAVE MONEY =================
     elif current_page == "💡 Save Money":
@@ -385,6 +396,7 @@ def render_app():
                 st.info("Great job! No non-essential expenses currently logged.")
         else:
             st.info("💡 Add your expenses first to receive personalized money-saving recommendations!")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: BUDGET & GOALS =================
     elif current_page == "🎯 Budget & Goals":
@@ -423,6 +435,7 @@ def render_app():
             else:
                 st.success(f"✅ {c_label}")
                 st.progress(pct)
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: INCOME & SAVINGS =================
     elif current_page == "💵 Income & Savings":
@@ -454,6 +467,7 @@ def render_app():
             st.dataframe(view_inc, use_container_width=True)
         else:
             st.info("No income records added yet.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: BILL REMINDERS =================
     elif current_page == "🔔 Bill Reminders":
@@ -487,6 +501,7 @@ def render_app():
             st.dataframe(b_df, use_container_width=True)
         else:
             st.info("No upcoming bill reminders.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: ADD EXPENSES =================
     elif current_page == "➕ Add Expenses":
@@ -521,6 +536,7 @@ def render_app():
                     st.rerun()
                 else:
                     st.error("Please enter an expense title.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: VIEW EXPENSES =================
     elif current_page == "📋 View Expenses":
@@ -532,6 +548,7 @@ def render_app():
             st.dataframe(view_df, use_container_width=True)
         else:
             st.info("No expenses logged yet.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: SEARCH EXPENSES =================
     elif current_page == "🔍 Search Expenses":
@@ -556,6 +573,7 @@ def render_app():
             st.dataframe(filtered_df, use_container_width=True)
         else:
             st.info("No expenses available to search.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: CATEGORY REPORT =================
     elif current_page == "📊 Category Report":
@@ -573,6 +591,7 @@ def render_app():
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No category data available yet.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: EDIT EXPENSE =================
     elif current_page == "✏️ Edit Expense":
@@ -605,6 +624,7 @@ def render_app():
                         st.rerun()
         else:
             st.info("No expenses available to edit.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: DELETE EXPENSE =================
     elif current_page == "🗑️ Delete Expense":
@@ -621,6 +641,7 @@ def render_app():
                 st.rerun()
         else:
             st.info("No expenses available to delete.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: CHART ANALYTICS =================
     elif current_page == "📈 Chart Analytics":
@@ -638,6 +659,7 @@ def render_app():
                 st.plotly_chart(fig_bar, use_container_width=True)
         else:
             st.info("No charts to display yet.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: FINANCIAL REPORT =================
     elif current_page == "📑 Financial Report":
@@ -655,6 +677,7 @@ def render_app():
             st.dataframe(summary_df, use_container_width=True)
         else:
             st.info("No financial report available.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: MONTHLY EXPENSES =================
     elif current_page == "📅 Monthly Expenses":
@@ -673,6 +696,7 @@ def render_app():
             st.dataframe(month_df, use_container_width=True)
         else:
             st.info("No monthly expense records available yet.")
+        render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: EXPORT SUMMARY =================
     elif current_page == "📥 Export Summary":
@@ -701,6 +725,7 @@ def render_app():
                 )
         else:
             st.info("No expense data available to export.")
+        render_bottom_author_footer()
 
 # Main Application Entrypoint
 if __name__ == "__main__":
