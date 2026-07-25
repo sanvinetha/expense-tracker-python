@@ -98,6 +98,15 @@ if "eliminated_savings" not in st.session_state:
 if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
 
+# Registered Users Database (Identity -> Password)
+if "registered_users" not in st.session_state:
+    st.session_state["registered_users"] = {
+        "user@example.com": "Password123",
+        "sanvinetha@gmail.com": "Sanvinetha@123",
+        "+91 98765 43210": "Pass@123",
+        "guest_user@example.com": "GuestPass123"
+    }
+
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
 def set_page(page_name):
@@ -107,7 +116,7 @@ def fmt_amt(amt):
     curr = st.session_state.get("currency_symbol", "₹")
     return f"{curr}{amt:,.2f}"
 
-# ==================== SIGN IN / LOGIN PAGE ==================== #
+# ==================== SIGN IN / LOGIN / SIGN UP PAGE ==================== #
 def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
@@ -115,37 +124,69 @@ def render_login_page():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.subheader("Sign In to Access Dashboard")
-        st.write("Please log in using your Mobile Number or Email ID")
+        auth_mode = st.radio("Choose Account Mode:", ["🔑 Sign In to Existing Account", "📝 Register / Create New Account"], horizontal=True)
         
-        with st.form("login_form"):
-            identity = st.text_input("Mobile Number or Email ID", placeholder="e.g. +91 98765 43210 or user@example.com")
-            password = st.text_input("Password / OTP", type="password", placeholder="Enter password or OTP")
-            submit_btn = st.form_submit_button("Sign In ➔", use_container_width=True)
+        # MODE 1: SIGN IN WITH REAL PASSWORD CHECK
+        if auth_mode == "🔑 Sign In to Existing Account":
+            st.subheader("Sign In - Password Verification Required")
+            st.write("Enter your registered Mobile Number / Email ID and correct Password:")
             
-            if submit_btn:
-                if identity and password:
-                    st.session_state["logged_in"] = True
-                    st.session_state["user_email"] = identity
-                    st.session_state["show_logout_confirm"] = False
-                    st.success("Successfully signed in!")
-                    st.rerun()
-                else:
-                    st.error("Please enter your Mobile Number or Email ID and Password.")
-        
-        st.markdown("<div style='text-align: center; margin: 1rem 0; color: #94a3b8;'>─── OR SIGN IN WITH ───</div>", unsafe_allow_html=True)
+            with st.form("login_form"):
+                identity = st.text_input("Mobile Number or Email ID", placeholder="e.g. sanvinetha@gmail.com or +91 98765 43210").strip().lower()
+                password = st.text_input("Original Account Password", type="password", placeholder="Enter your original password")
+                submit_btn = st.form_submit_button("Sign In ➔", use_container_width=True)
+                
+                if submit_btn:
+                    if not identity or not password:
+                        st.error("⚠️ Please enter both your Email/Mobile ID and Password.")
+                    elif identity in st.session_state["registered_users"]:
+                        # REAL PASSWORD VERIFICATION CHECK
+                        correct_password = st.session_state["registered_users"][identity]
+                        if password == correct_password:
+                            st.session_state["logged_in"] = True
+                            st.session_state["user_email"] = identity
+                            st.session_state["show_logout_confirm"] = False
+                            st.success("✅ Password verified! Access granted.")
+                            st.rerun()
+                        else:
+                            st.error("❌ Incorrect Password! Access denied. Please enter the original password for this Email ID.")
+                    else:
+                        st.error("❌ Account not found! Please check your Email ID or register a new account under 'Register / Create New Account'.")
+
+            st.markdown("<div style='text-align: center; margin: 1rem 0; color: #94a3b8;'>─── DEMO DEFAULT CREDENTIALS ───</div>", unsafe_allow_html=True)
+            st.info("💡 **Registered Demo Credentials**:\n- **Email**: `sanvinetha@gmail.com` | **Password**: `Sanvinetha@123`\n- **Email**: `user@example.com` | **Password**: `Password123`\n- **Mobile**: `+91 98765 43210` | **Password**: `Pass@123`")
+
+        # MODE 2: REGISTER NEW ACCOUNT AND SET ORIGINAL PASSWORD
+        else:
+            st.subheader("Create Account & Set Your Original Password")
+            st.write("Register your Email ID / Mobile Number and choose your secure password:")
+            
+            with st.form("register_form"):
+                reg_identity = st.text_input("Email ID or Mobile Number", placeholder="e.g. myemail@gmail.com").strip().lower()
+                reg_password = st.text_input("Choose Password", type="password", placeholder="Create a strong password")
+                confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter your password")
+                reg_submit = st.form_submit_button("Create Account & Save Password ➔", use_container_width=True)
+                
+                if reg_submit:
+                    if not reg_identity or not reg_password:
+                        st.error("⚠️ Please fill in all fields.")
+                    elif reg_password != confirm_password:
+                        st.error("❌ Passwords do not match! Please verify your password entry.")
+                    else:
+                        st.session_state["registered_users"][reg_identity] = reg_password
+                        st.session_state["logged_in"] = True
+                        st.session_state["user_email"] = reg_identity
+                        st.session_state["show_logout_confirm"] = False
+                        st.success("🎉 Account created & original password set successfully! Logged in.")
+                        st.rerun()
+
+        st.markdown("<div style='text-align: center; margin: 1.5rem 0; color: #94a3b8;'>─── OR SIGN IN WITH GOOGLE ───</div>", unsafe_allow_html=True)
         
         if st.button("🌐 Continue with Google Email ID", key="login_google", use_container_width=True):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "google_user@gmail.com"
             st.session_state["show_logout_confirm"] = False
             st.success("Signed in with Google Email ID!")
-            st.rerun()
-            
-        if st.button("🚀 Quick Demo Guest Login", key="login_guest", use_container_width=True):
-            st.session_state["logged_in"] = True
-            st.session_state["user_email"] = "guest_user@example.com"
-            st.session_state["show_logout_confirm"] = False
             st.rerun()
 
 # ==================== MAIN DASHBOARD ==================== #
@@ -154,7 +195,7 @@ def render_home_dashboard():
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track expenses & save money in Rupees (₹).", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Verified Account.", unsafe_allow_html=True)
     with head_col2:
         curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
         st.session_state["currency_symbol"] = curr_choice.split()[0]
@@ -178,7 +219,6 @@ def render_home_dashboard():
 
     st.markdown("---")
 
-    # RESTORED PREVIOUS CLEAN TOP BUTTON NAVIGATION MENU
     page_options = [
         "💰 Total Expenses",
         "💡 Save Money",
