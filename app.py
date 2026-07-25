@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 # Page Configuration for Streamlit Cloud
@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Hiding Streamlit Toolbar (Fork, GitHub, Menu) & Layout Styling
+# Custom CSS
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden !important;}
@@ -74,8 +74,25 @@ if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "💰 Total Expenses"
+if "currency_symbol" not in st.session_state:
+    st.session_state["currency_symbol"] = "₹"
 if "expenses" not in st.session_state:
     st.session_state["expenses"] = []
+if "incomes" not in st.session_state:
+    st.session_state["incomes"] = []
+if "bills" not in st.session_state:
+    st.session_state["bills"] = []
+if "category_budgets" not in st.session_state:
+    st.session_state["category_budgets"] = {
+        "Groceries": 5000.0,
+        "Food & Dining": 3000.0,
+        "Transportation": 2000.0,
+        "Utilities & Bills": 3500.0,
+        "Shopping": 2500.0,
+        "Entertainment": 1500.0,
+        "Health & Medical": 2000.0,
+        "Other": 1000.0
+    }
 if "eliminated_savings" not in st.session_state:
     st.session_state["eliminated_savings"] = 0.0
 if "show_logout_confirm" not in st.session_state:
@@ -86,10 +103,15 @@ NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other
 def set_page(page_name):
     st.session_state["active_page"] = page_name
 
+def fmt_amt(amt):
+    curr = st.session_state.get("currency_symbol", "₹")
+    return f"{curr}{amt:,.2f}"
+
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
+    curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-header' style='text-align: center;'>Manage your personal expenses & save money in Rupees (₹)</p>", unsafe_allow_html=True)
+    st.markdown(f"<p class='sub-header' style='text-align: center;'>Manage your personal expenses, budgets & savings in {curr}</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -128,16 +150,19 @@ def render_login_page():
 
 # ==================== MAIN DASHBOARD ==================== #
 def render_home_dashboard():
+    curr = st.session_state.get("currency_symbol", "₹")
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track expenses & save money in Rupees (₹).", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track expenses, budgets & savings in **{curr}**.", unsafe_allow_html=True)
     with head_col2:
-        st.write("")
+        curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
+        st.session_state["currency_symbol"] = curr_choice.split()[0]
+        
         if st.button("🚪 Sign Out", key="top_logout", use_container_width=True):
             st.session_state["show_logout_confirm"] = True
 
-    # CONFIRM SIGN OUT MODAL / ALERT PROMPT
+    # CONFIRM SIGN OUT MODAL
     if st.session_state["show_logout_confirm"]:
         st.warning("⚠️ **Confirm Sign Out**: Are you sure you want to sign out of Expense Tracker?")
         btn_c1, btn_c2, btn_c3 = st.columns([1, 1, 2])
@@ -153,10 +178,13 @@ def render_home_dashboard():
 
     st.markdown("---")
 
-    # CLEAN TOP NAVIGATION MENU BUTTONS ONLY
+    # TOP NAVIGATION MENU BUTTONS INCLUDING ALL SUGGESTED FEATURES
     page_options = [
         "💰 Total Expenses",
         "💡 Save Money",
+        "🎯 Budget & Goals",
+        "💵 Income & Savings",
+        "🔔 Bill Reminders",
         "➕ Add Expenses",
         "📋 View Expenses",
         "🔍 Search Expenses",
@@ -169,8 +197,8 @@ def render_home_dashboard():
         "📥 Export Summary"
     ]
 
-    nav_cols_1 = st.columns(6)
-    for idx, page in enumerate(page_options[:6]):
+    nav_cols_1 = st.columns(5)
+    for idx, page in enumerate(page_options[:5]):
         with nav_cols_1[idx]:
             is_active = (st.session_state["active_page"] == page)
             btn_label = f"▸ {page}" if is_active else page
@@ -178,43 +206,60 @@ def render_home_dashboard():
                 set_page(page)
                 st.rerun()
 
-    nav_cols_2 = st.columns(6)
-    for idx, page in enumerate(page_options[6:]):
+    nav_cols_2 = st.columns(5)
+    for idx, page in enumerate(page_options[5:10]):
         with nav_cols_2[idx]:
             is_active = (st.session_state["active_page"] == page)
             btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx+6}", use_container_width=True):
+            if st.button(btn_label, key=f"nav_top_{idx+5}", use_container_width=True):
+                set_page(page)
+                st.rerun()
+
+    nav_cols_3 = st.columns(5)
+    for idx, page in enumerate(page_options[10:]):
+        with nav_cols_3[idx]:
+            is_active = (st.session_state["active_page"] == page)
+            btn_label = f"▸ {page}" if is_active else page
+            if st.button(btn_label, key=f"nav_top_{idx+10}", use_container_width=True):
                 set_page(page)
                 st.rerun()
 
     st.markdown("---")
 
     df = pd.DataFrame(st.session_state["expenses"])
+    inc_df = pd.DataFrame(st.session_state["incomes"])
     current_page = st.session_state["active_page"]
 
     # ================= PAGE 1: TOTAL EXPENSES =================
     if current_page == "💰 Total Expenses":
-        st.subheader("💰 Financial Summary (in ₹)")
+        st.subheader(f"💰 Financial Summary ({curr})")
         
+        total_exp = df["amount"].sum() if not df.empty else 0.0
+        total_inc = inc_df["amount"].sum() if not inc_df.empty else 0.0
+        net_sav = total_inc - total_exp
+        
+        # Calculate Financial Health Score (0 - 100)
+        health_score = 100
+        if total_inc > 0:
+            savings_rate = (net_sav / total_inc) * 100
+            health_score = max(0, min(100, int(savings_rate * 2)))
+        elif total_exp > 0:
+            health_score = 40
+            
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Expenses", fmt_amt(total_exp))
+        c2.metric("Total Income", fmt_amt(total_inc))
+        c3.metric("Net Savings", fmt_amt(net_sav))
+        c4.metric("Financial Health Score", f"{health_score} / 100")
+        
+        st.markdown("---")
+        st.subheader(f"📋 Recent Transaction History ({curr})")
         if not df.empty:
-            total_amount = df["amount"].sum()
-            total_count = len(df)
-            avg_amount = df["amount"].mean()
-            top_category = df.groupby("category")["amount"].sum().idxmax()
-            
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Total Expenses", f"₹{total_amount:,.2f}")
-            c2.metric("Total Transactions", total_count)
-            c3.metric("Average Expense", f"₹{avg_amount:,.2f}")
-            c4.metric("Top Category", top_category)
-            
-            st.markdown("---")
-            st.subheader("📋 Recent Transaction History (₹)")
             display_df = df.copy()
-            display_df["amount"] = display_df["amount"].apply(lambda x: f"₹{x:,.2f}")
+            display_df["amount"] = display_df["amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(display_df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
         else:
-            st.info("💡 No expenses added yet. Click on the '➕ Add Expenses' button above to log your first expense!")
+            st.info("💡 No expenses added yet. Click '➕ Add Expenses' above to log your first expense!")
 
     # ================= PAGE 2: SAVE MONEY =================
     elif current_page == "💡 Save Money":
@@ -227,9 +272,9 @@ def render_home_dashboard():
             potential_savings_30 = total_non_essential * 0.30
             
             s_col1, s_col2, s_col3 = st.columns(3)
-            s_col1.metric("Non-Essential Spending", f"₹{total_non_essential:,.2f}")
-            s_col2.metric("Potential Monthly Savings (30% Cut)", f"₹{potential_savings_30:,.2f}")
-            s_col3.metric("Total Saved from Eliminated Expenses", f"₹{st.session_state['eliminated_savings']:,.2f}")
+            s_col1.metric("Non-Essential Spending", fmt_amt(total_non_essential))
+            s_col2.metric("Potential Savings (30% Cut)", fmt_amt(potential_savings_30))
+            s_col3.metric("Total Saved from Eliminated Expenses", fmt_amt(st.session_state['eliminated_savings']))
             
             st.markdown("---")
             st.subheader("🎯 Where Money Can Be Saved (Smart Recommendations)")
@@ -241,7 +286,7 @@ def render_home_dashboard():
                     st.markdown(f"""
                     <div class='savings-card'>
                         <div class='savings-title'>🍽️ Food & Dining Out Savings</div>
-                        <div>You spent <b>₹{dining_spend:,.2f}</b> on dining out. Cooking at home 2 extra days per week can save you approx <b>₹{dining_spend * 0.4:,.2f}</b> monthly!</div>
+                        <div>You spent <b>{fmt_amt(dining_spend)}</b> on dining out. Cooking at home 2 extra days per week can save you approx <b>{fmt_amt(dining_spend * 0.4)}</b> monthly!</div>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -250,7 +295,7 @@ def render_home_dashboard():
                     st.markdown(f"""
                     <div class='savings-card'>
                         <div class='savings-title'>🛍️ Shopping & Impulse Buy Savings</div>
-                        <div>You spent <b>₹{shopping_spend:,.2f}</b> on shopping. Applying a 48-hour wait rule before buying non-essentials can save <b>₹{shopping_spend * 0.35:,.2f}</b>!</div>
+                        <div>You spent <b>{fmt_amt(shopping_spend)}</b> on shopping. Applying a 48-hour wait rule before buying non-essentials can save <b>{fmt_amt(shopping_spend * 0.35)}</b>!</div>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -260,25 +305,15 @@ def render_home_dashboard():
                     st.markdown(f"""
                     <div class='savings-card'>
                         <div class='savings-title'>🎬 Entertainment & Subscriptions</div>
-                        <div>You spent <b>₹{ent_spend:,.2f}</b> on entertainment. Auditing unused streaming services can save you up to <b>₹{ent_spend * 0.5:,.2f}</b>.</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                other_spend = df[df["category"] == "Other"]["amount"].sum()
-                if other_spend > 0:
-                    st.markdown(f"""
-                    <div class='savings-card'>
-                        <div class='savings-title'>📦 Miscellaneous Expenses</div>
-                        <div>You spent <b>₹{other_spend:,.2f}</b> on unclassified items. Tracking small daily cash purchases saves up to <b>₹{other_spend * 0.25:,.2f}</b>.</div>
+                        <div>You spent <b>{fmt_amt(ent_spend)}</b> on entertainment. Auditing unused streaming services can save you up to <b>{fmt_amt(ent_spend * 0.5)}</b>.</div>
                     </div>
                     """, unsafe_allow_html=True)
 
             st.markdown("---")
             st.subheader("✂️ Remove Unnecessary Expenses to Save Money")
-            st.write("Select an optional / non-essential expense to eliminate it and save money:")
             
             if not non_essential_df.empty:
-                save_options = {f"#{row['id']} - {row['title']} (₹{row['amount']:,.2f}) [{row['category']}]": row for _, row in non_essential_df.iterrows()}
+                save_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])}) [{row['category']}]": row for _, row in non_essential_df.iterrows()}
                 selected_save_label = st.selectbox("Select Unnecessary Expense to Remove & Save:", list(save_options.keys()))
                 selected_save_item = save_options[selected_save_label]
                 
@@ -286,20 +321,119 @@ def render_home_dashboard():
                     saved_amount = selected_save_item["amount"]
                     st.session_state["eliminated_savings"] += saved_amount
                     st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_save_item["id"]]
-                    st.success(f"🎉 Expense '{selected_save_item['title']}' eliminated! You saved ₹{saved_amount:,.2f}!")
+                    st.success(f"🎉 Expense '{selected_save_item['title']}' eliminated! You saved {fmt_amt(saved_amount)}!")
                     st.rerun()
             else:
                 st.info("Great job! No non-essential expenses currently logged.")
         else:
             st.info("💡 Add your expenses first to receive personalized money-saving recommendations!")
 
-    # ================= PAGE 3: ADD EXPENSES =================
+    # ================= NEW FEATURE 3: BUDGET & GOALS =================
+    elif current_page == "🎯 Budget & Goals":
+        st.subheader("🎯 Category Monthly Budget Limits & Alerts")
+        st.write("Set category monthly spending caps and monitor live budget progress alerts.")
+        
+        budgets = st.session_state["category_budgets"]
+        cat_spend = df.groupby("category")["amount"].sum().to_dict() if not df.empty else {}
+        
+        st.markdown("#### Set Monthly Category Caps")
+        b_cols = st.columns(4)
+        idx = 0
+        for cat, limit in list(budgets.items()):
+            with b_cols[idx % 4]:
+                new_limit = st.number_input(f"{cat} Limit ({curr})", min_value=100.0, value=float(limit), step=500.0, key=f"bud_in_{cat}")
+                budgets[cat] = new_limit
+            idx += 1
+
+        st.markdown("---")
+        st.markdown("#### Live Category Budget Status & Over-Budget Alerts")
+        
+        for cat, limit in budgets.items():
+            spent = cat_spend.get(cat, 0.0)
+            pct = min(1.0, spent / limit) if limit > 0 else 0.0
+            pct_val = int((spent / limit) * 100) if limit > 0 else 0
+            
+            c_label = f"**{cat}**: Spent {fmt_amt(spent)} / Limit {fmt_amt(limit)} ({pct_val}%)"
+            
+            if pct_val >= 100:
+                st.error(f"🚨 **OVER BUDGET ALERT**: {c_label}")
+                st.progress(1.0)
+            elif pct_val >= 80:
+                st.warning(f"⚠️ **BUDGET WARNING (80%+ Reached)**: {c_label}")
+                st.progress(pct)
+            else:
+                st.success(f"✅ {c_label}")
+                st.progress(pct)
+
+    # ================= NEW FEATURE 4: INCOME & SAVINGS =================
+    elif current_page == "💵 Income & Savings":
+        st.subheader("💵 Income Sources & Net Savings Calculator")
+        
+        with st.form("add_income_form"):
+            col_i1, col_i2 = st.columns(2)
+            inc_title = col_i1.text_input("Income Source", placeholder="e.g. Monthly Salary, Freelance Work")
+            inc_amount = col_i2.number_input(f"Amount ({curr})", min_value=1.0, step=1000.0)
+            inc_date = st.date_input("Date Received", datetime.today())
+            
+            if st.form_submit_button("Save Income Entry"):
+                if inc_title:
+                    st.session_state["incomes"].append({
+                        "id": int(datetime.now().timestamp()),
+                        "title": inc_title,
+                        "amount": float(inc_amount),
+                        "date": str(inc_date)
+                    })
+                    st.success(f"Saved income: {inc_title} ({fmt_amt(inc_amount)})")
+                    st.rerun()
+
+        st.markdown("---")
+        st.subheader("📋 Recorded Income Sources")
+        if not inc_df.empty:
+            view_inc = inc_df.copy()
+            view_inc["amount"] = view_inc["amount"].apply(lambda x: fmt_amt(x))
+            st.dataframe(view_inc, use_container_width=True)
+        else:
+            st.info("No income records added yet.")
+
+    # ================= NEW FEATURE 5: BILL REMINDERS =================
+    elif current_page == "🔔 Bill Reminders":
+        st.subheader("🔔 Subscription & Bill Payment Reminders")
+        st.write("Track upcoming recurring bill payments (Rent, Netflix, Electricity, Wifi).")
+        
+        with st.form("add_bill_form"):
+            col_b1, col_b2, col_b3 = st.columns(3)
+            b_title = col_b1.text_input("Bill Name", placeholder="e.g. House Rent, WiFi Bill")
+            b_amount = col_b2.number_input(f"Bill Amount ({curr})", min_value=1.0, step=100.0)
+            b_due = col_b3.date_input("Due Date", datetime.today() + timedelta(days=7))
+            
+            if st.form_submit_button("Add Bill Reminder"):
+                if b_title:
+                    st.session_state["bills"].append({
+                        "id": int(datetime.now().timestamp()),
+                        "title": b_title,
+                        "amount": float(b_amount),
+                        "due_date": str(b_due),
+                        "status": "Pending"
+                    })
+                    st.success(f"Bill reminder added for {b_title}")
+                    st.rerun()
+
+        st.markdown("---")
+        st.subheader("📅 Upcoming Bills Schedule")
+        if st.session_state["bills"]:
+            b_df = pd.DataFrame(st.session_state["bills"])
+            b_df["amount"] = b_df["amount"].apply(lambda x: fmt_amt(x))
+            st.dataframe(b_df, use_container_width=True)
+        else:
+            st.info("No upcoming bill reminders.")
+
+    # ================= PAGE 6: ADD EXPENSES =================
     elif current_page == "➕ Add Expenses":
-        st.subheader("➕ Add New Expense Entry (in ₹)")
+        st.subheader(f"➕ Add New Expense Entry ({curr})")
         with st.form("add_expense_form_main"):
             col_a, col_b = st.columns(2)
             title = col_a.text_input("Expense Title", placeholder="e.g. Supermarket Groceries")
-            amount = col_b.number_input("Amount (₹)", min_value=1.0, step=10.0)
+            amount = col_b.number_input(f"Amount ({curr})", min_value=1.0, step=10.0)
             
             col_c, col_d, col_e = st.columns(3)
             category = col_c.selectbox("Category", ["Groceries", "Food & Dining", "Transportation", "Utilities & Bills", "Shopping", "Entertainment", "Health & Medical", "Other"])
@@ -321,22 +455,22 @@ def render_home_dashboard():
                         "notes": notes
                     }
                     st.session_state["expenses"].insert(0, new_item)
-                    st.success(f"Added: {title} (₹{amount:,.2f})")
+                    st.success(f"Added: {title} ({fmt_amt(amount)})")
                     st.rerun()
                 else:
                     st.error("Please enter an expense title.")
 
-    # ================= PAGE 4: VIEW EXPENSES =================
+    # ================= PAGE 7: VIEW EXPENSES =================
     elif current_page == "📋 View Expenses":
-        st.subheader("📋 View All Recorded Expenses (₹)")
+        st.subheader(f"📋 View All Recorded Expenses ({curr})")
         if not df.empty:
             view_df = df.copy()
-            view_df["amount"] = view_df["amount"].apply(lambda x: f"₹{x:,.2f}")
+            view_df["amount"] = view_df["amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(view_df, use_container_width=True)
         else:
             st.info("No expenses logged yet. Click '➕ Add Expenses' above to add your first expense.")
 
-    # ================= PAGE 5: SEARCH EXPENSES =================
+    # ================= PAGE 8: SEARCH EXPENSES =================
     elif current_page == "🔍 Search Expenses":
         st.subheader("🔍 Search & Filter Expenses")
         if not df.empty:
@@ -354,32 +488,32 @@ def render_home_dashboard():
                 filtered_df = filtered_df[filtered_df["payment_method"] == payment_filter]
                 
             st.write(f"Showing {len(filtered_df)} matching results:")
-            filtered_df["amount"] = filtered_df["amount"].apply(lambda x: f"₹{x:,.2f}")
+            filtered_df["amount"] = filtered_df["amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(filtered_df, use_container_width=True)
         else:
             st.info("No expenses available to search. Add an expense first.")
 
-    # ================= PAGE 6: CATEGORY REPORT =================
+    # ================= PAGE 9: CATEGORY REPORT =================
     elif current_page == "📊 Category Report":
-        st.subheader("📊 Category Report & Distribution (₹)")
+        st.subheader(f"📊 Category Report & Distribution ({curr})")
         if not df.empty:
             cat_df = df.groupby("category")["amount"].agg(["sum", "count"]).reset_index()
-            cat_df.columns = ["Category", "Total Spent (₹)", "Count"]
-            total_sum = cat_df["Total Spent (₹)"].sum()
-            cat_df["Percentage (%)"] = (cat_df["Total Spent (₹)"] / total_sum * 100).round(1)
+            cat_df.columns = ["Category", f"Total Spent ({curr})", "Count"]
+            total_sum = cat_df[f"Total Spent ({curr})"].sum()
+            cat_df["Percentage (%)"] = (cat_df[f"Total Spent ({curr})"] / total_sum * 100).round(1)
             
-            st.dataframe(cat_df.sort_values(by="Total Spent (₹)", ascending=False), use_container_width=True)
+            st.dataframe(cat_df.sort_values(by=f"Total Spent ({curr})", ascending=False), use_container_width=True)
             
-            fig = px.pie(cat_df, names="Category", values="Total Spent (₹)", title="Category Share (%)", hole=0.4)
+            fig = px.pie(cat_df, names="Category", values=f"Total Spent ({curr})", title="Category Share (%)", hole=0.4)
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.info("No category data available yet. Add an expense first.")
 
-    # ================= PAGE 7: EDIT EXPENSE =================
+    # ================= PAGE 10: EDIT EXPENSE =================
     elif current_page == "✏️ Edit Expense":
-        st.subheader("✏️ Edit Existing Expense (₹)")
+        st.subheader(f"✏️ Edit Existing Expense ({curr})")
         if not df.empty:
-            expense_options = {f"#{row['id']} - {row['title']} (₹{row['amount']:,.2f})": row['id'] for _, row in df.iterrows()}
+            expense_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])})": row['id'] for _, row in df.iterrows()}
             selected_label = st.selectbox("Choose Expense to Edit:", list(expense_options.keys()))
             selected_id = expense_options[selected_label]
             
@@ -388,7 +522,7 @@ def render_home_dashboard():
             if selected_item:
                 with st.form("edit_form_main"):
                     edit_title = st.text_input("Title", value=selected_item["title"])
-                    edit_amount = st.number_input("Amount (₹)", value=float(selected_item["amount"]), step=10.0)
+                    edit_amount = st.number_input(f"Amount ({curr})", value=float(selected_item["amount"]), step=10.0)
                     edit_category = st.selectbox("Category", ["Groceries", "Food & Dining", "Transportation", "Utilities & Bills", "Shopping", "Entertainment", "Health & Medical", "Other"], index=0)
                     edit_date = st.date_input("Date", datetime.strptime(selected_item["date"], "%Y-%m-%d"))
                     edit_payment = st.selectbox("Payment Method", ["UPI / Online Transfer", "Credit Card", "Debit Card", "Cash"], index=0)
@@ -406,11 +540,11 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to edit.")
 
-    # ================= PAGE 8: DELETE EXPENSE =================
+    # ================= PAGE 11: DELETE EXPENSE =================
     elif current_page == "🗑️ Delete Expense":
         st.subheader("🗑️ Delete Expense Entry")
         if not df.empty:
-            expense_options = {f"#{row['id']} - {row['title']} (₹{row['amount']:,.2f})": row['id'] for _, row in df.iterrows()}
+            expense_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])})": row['id'] for _, row in df.iterrows()}
             selected_label = st.selectbox("Choose Expense to Delete:", list(expense_options.keys()))
             selected_id = expense_options[selected_label]
             
@@ -421,41 +555,41 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to delete.")
 
-    # ================= PAGE 9: CHART ANALYTICS =================
+    # ================= PAGE 12: CHART ANALYTICS =================
     elif current_page == "📈 Chart Analytics":
-        st.subheader("📈 Interactive Chart Analytics (₹)")
+        st.subheader(f"📈 Interactive Chart Analytics ({curr})")
         if not df.empty:
             c_ch1, c_ch2 = st.columns(2)
             with c_ch1:
-                fig_pie = px.pie(df, names="category", values="amount", title="Category Distribution in Rupees (₹)", hole=0.3)
+                fig_pie = px.pie(df, names="category", values="amount", title=f"Category Distribution in {curr}", hole=0.3)
                 st.plotly_chart(fig_pie, use_container_width=True)
             with c_ch2:
                 df["month"] = df["date"].str.slice(0, 7)
                 monthly_df = df.groupby("month")["amount"].sum().reset_index()
-                fig_bar = px.bar(monthly_df, x="month", y="amount", title="Monthly Spending Trend (₹)", labels={"amount": "Amount (₹)", "month": "Month"})
+                fig_bar = px.bar(monthly_df, x="month", y="amount", title=f"Monthly Spending Trend ({curr})", labels={"amount": f"Amount ({curr})", "month": "Month"})
                 st.plotly_chart(fig_bar, use_container_width=True)
         else:
             st.info("No charts to display yet. Add an expense first.")
 
-    # ================= PAGE 10: FINANCIAL REPORT =================
+    # ================= PAGE 13: FINANCIAL REPORT =================
     elif current_page == "📑 Financial Report":
-        st.subheader("📑 Financial Statement Report (₹)")
+        st.subheader(f"📑 Financial Statement Report ({curr})")
         if not df.empty:
             st.markdown(f"**Report Account:** `{st.session_state['user_email']}` | **Date:** `{datetime.now().strftime('%B %d, %Y')}`")
             summary_df = df.groupby("category").agg(
-                Total_Amount_Rupees=("amount", "sum"),
+                Total_Amount=("amount", "sum"),
                 Transaction_Count=("amount", "count"),
-                Average_Amount_Rupees=("amount", "mean")
+                Average_Amount=("amount", "mean")
             ).reset_index()
-            summary_df["Total_Amount_Rupees"] = summary_df["Total_Amount_Rupees"].apply(lambda x: f"₹{x:,.2f}")
-            summary_df["Average_Amount_Rupees"] = summary_df["Average_Amount_Rupees"].apply(lambda x: f"₹{x:,.2f}")
+            summary_df["Total_Amount"] = summary_df["Total_Amount"].apply(lambda x: fmt_amt(x))
+            summary_df["Average_Amount"] = summary_df["Average_Amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(summary_df, use_container_width=True)
         else:
             st.info("No financial report available. Add an expense first.")
 
-    # ================= PAGE 11: MONTHLY EXPENSES =================
+    # ================= PAGE 14: MONTHLY EXPENSES =================
     elif current_page == "📅 Monthly Expenses":
-        st.subheader("📅 Monthly Expenses Breakdown (₹)")
+        st.subheader(f"📅 Monthly Expenses Breakdown ({curr})")
         if not df.empty:
             df["Month-Year"] = df["date"].str.slice(0, 7)
             month_df = df.groupby("Month-Year").agg(
@@ -464,15 +598,15 @@ def render_home_dashboard():
                 Average_Spend=("amount", "mean")
             ).reset_index().sort_values(by="Month-Year", ascending=False)
             
-            month_df["Total_Spent"] = month_df["Total_Spent"].apply(lambda x: f"₹{x:,.2f}")
-            month_df["Average_Spend"] = month_df["Average_Spend"].apply(lambda x: f"₹{x:,.2f}")
+            month_df["Total_Spent"] = month_df["Total_Spent"].apply(lambda x: fmt_amt(x))
+            month_df["Average_Spend"] = month_df["Average_Spend"].apply(lambda x: fmt_amt(x))
             st.dataframe(month_df, use_container_width=True)
         else:
             st.info("No monthly expense records available yet.")
 
-    # ================= PAGE 12: EXPORT SUMMARY =================
+    # ================= PAGE 15: EXPORT SUMMARY =================
     elif current_page == "📥 Export Summary":
-        st.subheader("📥 Export Summary Data (in ₹)")
+        st.subheader(f"📥 Export Summary Data ({curr})")
         if not df.empty:
             csv_data = df.to_csv(index=False).encode('utf-8')
             json_data = json.dumps(st.session_state["expenses"], indent=2)
@@ -480,17 +614,17 @@ def render_home_dashboard():
             e_col1, e_col2 = st.columns(2)
             with e_col1:
                 st.download_button(
-                    label="📄 Download CSV File (₹)",
+                    label=f"📄 Download CSV File ({curr})",
                     data=csv_data,
-                    file_name=f"expense_summary_rupees_{datetime.now().strftime('%Y%m%d')}.csv",
+                    file_name=f"expense_summary_{datetime.now().strftime('%Y%m%d')}.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
             with e_col2:
                 st.download_button(
-                    label="code Download JSON File (₹)",
+                    label=f"code Download JSON File ({curr})",
                     data=json_data,
-                    file_name=f"expense_summary_rupees_{datetime.now().strftime('%Y%m%d')}.json",
+                    file_name=f"expense_summary_{datetime.now().strftime('%Y%m%d')}.json",
                     mime="application/json",
                     use_container_width=True
                 )
