@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
+# Custom CSS for Streamlit Elements and Layout
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden !important;}
@@ -49,20 +49,29 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 0.25rem;
     }
-    div.stButton > button {
-        border-radius: 10px !important;
-        padding: 0.6rem 1rem !important;
-        font-weight: 700 !important;
-        font-size: 0.95rem !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        background: rgba(30, 41, 59, 0.7) !important;
+    /* Horizontal Navigation Styling */
+    div[data-testid="stRadio"] > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(30, 41, 59, 0.6);
+        padding: 10px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    div[data-testid="stRadio"] label {
+        background: rgba(15, 23, 42, 0.6) !important;
+        padding: 8px 16px !important;
+        border-radius: 8px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        cursor: pointer !important;
+        font-weight: 600 !important;
         color: #f8fafc !important;
         transition: all 0.2s ease !important;
     }
-    div.stButton > button:hover {
+    div[data-testid="stRadio"] label:hover {
         border-color: #3b82f6 !important;
-        background: linear-gradient(135deg, #1e293b, #334155) !important;
-        transform: translateY(-1px) !important;
+        background: #1e293b !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -72,8 +81,6 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
-if "active_page" not in st.session_state:
-    st.session_state["active_page"] = "💰 Total Expenses"
 if "currency_symbol" not in st.session_state:
     st.session_state["currency_symbol"] = "₹"
 if "expenses" not in st.session_state:
@@ -99,9 +106,6 @@ if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
 
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
-
-def set_page(page_name):
-    st.session_state["active_page"] = page_name
 
 def fmt_amt(amt):
     curr = st.session_state.get("currency_symbol", "₹")
@@ -154,7 +158,7 @@ def render_home_dashboard():
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track expenses, budgets & savings in **{curr}**.", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Select any feature below to open it directly.", unsafe_allow_html=True)
     with head_col2:
         curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
         st.session_state["currency_symbol"] = curr_choice.split()[0]
@@ -178,7 +182,7 @@ def render_home_dashboard():
 
     st.markdown("---")
 
-    # TOP NAVIGATION MENU BUTTONS INCLUDING ALL SUGGESTED FEATURES
+    # DIRECT HORIZONTAL NAVIGATION BAR - OPENS INSTANTLY UPON CLICKING
     page_options = [
         "💰 Total Expenses",
         "💡 Save Money",
@@ -197,38 +201,17 @@ def render_home_dashboard():
         "📥 Export Summary"
     ]
 
-    nav_cols_1 = st.columns(5)
-    for idx, page in enumerate(page_options[:5]):
-        with nav_cols_1[idx]:
-            is_active = (st.session_state["active_page"] == page)
-            btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx}", use_container_width=True):
-                set_page(page)
-                st.rerun()
-
-    nav_cols_2 = st.columns(5)
-    for idx, page in enumerate(page_options[5:10]):
-        with nav_cols_2[idx]:
-            is_active = (st.session_state["active_page"] == page)
-            btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx+5}", use_container_width=True):
-                set_page(page)
-                st.rerun()
-
-    nav_cols_3 = st.columns(5)
-    for idx, page in enumerate(page_options[10:]):
-        with nav_cols_3[idx]:
-            is_active = (st.session_state["active_page"] == page)
-            btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx+10}", use_container_width=True):
-                set_page(page)
-                st.rerun()
+    current_page = st.radio(
+        "📌 Select Feature to Open Directly:",
+        page_options,
+        horizontal=True,
+        key="direct_nav_radio"
+    )
 
     st.markdown("---")
 
     df = pd.DataFrame(st.session_state["expenses"])
     inc_df = pd.DataFrame(st.session_state["incomes"])
-    current_page = st.session_state["active_page"]
 
     # ================= PAGE 1: TOTAL EXPENSES =================
     if current_page == "💰 Total Expenses":
@@ -238,7 +221,6 @@ def render_home_dashboard():
         total_inc = inc_df["amount"].sum() if not inc_df.empty else 0.0
         net_sav = total_inc - total_exp
         
-        # Calculate Financial Health Score (0 - 100)
         health_score = 100
         if total_inc > 0:
             savings_rate = (net_sav / total_inc) * 100
@@ -259,7 +241,7 @@ def render_home_dashboard():
             display_df["amount"] = display_df["amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(display_df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
         else:
-            st.info("💡 No expenses added yet. Click '➕ Add Expenses' above to log your first expense!")
+            st.info("💡 No expenses added yet. Select '➕ Add Expenses' above to log your first expense!")
 
     # ================= PAGE 2: SAVE MONEY =================
     elif current_page == "💡 Save Money":
@@ -328,7 +310,7 @@ def render_home_dashboard():
         else:
             st.info("💡 Add your expenses first to receive personalized money-saving recommendations!")
 
-    # ================= NEW FEATURE 3: BUDGET & GOALS =================
+    # ================= PAGE 3: BUDGET & GOALS =================
     elif current_page == "🎯 Budget & Goals":
         st.subheader("🎯 Category Monthly Budget Limits & Alerts")
         st.write("Set category monthly spending caps and monitor live budget progress alerts.")
@@ -365,7 +347,7 @@ def render_home_dashboard():
                 st.success(f"✅ {c_label}")
                 st.progress(pct)
 
-    # ================= NEW FEATURE 4: INCOME & SAVINGS =================
+    # ================= PAGE 4: INCOME & SAVINGS =================
     elif current_page == "💵 Income & Savings":
         st.subheader("💵 Income Sources & Net Savings Calculator")
         
@@ -395,7 +377,7 @@ def render_home_dashboard():
         else:
             st.info("No income records added yet.")
 
-    # ================= NEW FEATURE 5: BILL REMINDERS =================
+    # ================= PAGE 5: BILL REMINDERS =================
     elif current_page == "🔔 Bill Reminders":
         st.subheader("🔔 Subscription & Bill Payment Reminders")
         st.write("Track upcoming recurring bill payments (Rent, Netflix, Electricity, Wifi).")
