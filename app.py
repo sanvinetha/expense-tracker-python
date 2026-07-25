@@ -187,13 +187,14 @@ def render_app():
 
     # ================= HOME PAGE SLIDE (FEATURES FIRST, FINANCIAL SUMMARY AT BOTTOM) =================
     if current_page == "HOME":
+        # ➕ Add Expenses is placed at 3rd place in the first line!
         features_grid = [
             ("💰 Total Expenses", "View full overview & metrics"),
             ("💡 Save Money", "Cut unnecessary expenses & save 30%"),
+            ("➕ Add Expenses", "Log new spending transactions"),
             ("🎯 Budget & Goals", "Category spending limits & alerts"),
             ("💵 Income & Savings", "Track income streams & net savings"),
             ("🔔 Bill Reminders", "Upcoming subscription bill dates"),
-            ("➕ Add Expenses", "Log new spending transactions"),
             ("📋 View Expenses", "Full transaction history table"),
             ("🔍 Search Expenses", "Filter transactions by category"),
             ("📊 Category Report", "Breakdown by spending category"),
@@ -213,11 +214,11 @@ def render_app():
                 if item_idx < len(features_grid):
                     title, desc = features_grid[item_idx]
                     with cols[col_idx]:
-                        st.markdown(f"**{title}**")
-                        st.caption(desc)
-                        if st.button(f"Open {title} ➔", key=f"grid_btn_{item_idx}", use_container_width=True):
+                        # BUTTON TEXT IS EXACT FEATURE NAME ONLY (NO 'Open' PREFIX)
+                        if st.button(title, key=f"grid_btn_{item_idx}", use_container_width=True):
                             set_page(title)
                             st.rerun()
+                        st.caption(desc)
                         st.markdown("<br>", unsafe_allow_html=True)
 
         st.markdown("---")
