@@ -9,10 +9,10 @@ st.set_page_config(
     page_title="Expense Tracker Python",
     page_icon="💰",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"  # Collapsed by default so options are on main home screen!
 )
 
-# Custom CSS for rich aesthetics and dark/light styling
+# Custom Styling for Home Screen Cards & Navigation
 st.markdown("""
     <style>
     .main-header {
@@ -29,30 +29,46 @@ st.markdown("""
         color: #94a3b8;
         margin-bottom: 1.5rem;
     }
-    .metric-card {
+    .feature-card {
         background: rgba(30, 41, 59, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        padding: 1.2rem;
+        padding: 1.25rem;
         text-align: center;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+        margin-bottom: 1rem;
     }
-    .stButton>button {
+    .feature-card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-3px);
+    }
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    .feature-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 0.25rem;
+    }
+    .feature-desc {
+        font-size: 0.825rem;
+        color: #94a3b8;
+    }
+    /* Tab Styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
         border-radius: 8px;
+        padding: 8px 16px;
         font-weight: 600;
+        background-color: rgba(30, 41, 59, 0.5);
     }
-    .google-btn {
-        background-color: #ffffff !important;
-        color: #1e293b !important;
-        border: 1px solid #cbd5e1 !important;
-        font-weight: 600 !important;
-        width: 100%;
-        padding: 0.6rem;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        cursor: pointer;
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -62,6 +78,8 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
+if "active_tab_index" not in st.session_state:
+    st.session_state["active_tab_index"] = 0
 if "expenses" not in st.session_state:
     st.session_state["expenses"] = [
         {"id": 101, "title": "Supermarket Groceries", "amount": 145.50, "category": "Groceries", "date": "2026-07-24", "payment_method": "Credit Card", "notes": "Weekly household food"},
@@ -73,12 +91,12 @@ if "expenses" not in st.session_state:
 
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
-    st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-header'>Manage your personal expenses effortlessly</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-header' style='text-align: center;'>Manage your personal expenses seamlessly</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.subheader("Welcome Back - Sign In")
+        st.subheader("Sign In to Access Dashboard")
         st.write("Please log in using your Mobile Number or Email ID")
         
         with st.form("login_form"):
@@ -93,11 +111,11 @@ def render_login_page():
                     st.success("Successfully signed in!")
                     st.rerun()
                 else:
-                    st.error("Please enter a valid Email/Mobile and Password.")
+                    st.error("Please enter your Mobile Number or Email ID and Password.")
         
         st.markdown("<div style='text-align: center; margin: 1rem 0; color: #94a3b8;'>─── OR SIGN IN WITH ───</div>", unsafe_allow_html=True)
         
-        # Google Email ID Option
+        # Google Email ID Option Below Form
         if st.button("🌐 Continue with Google Email ID", use_container_width=True):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "google_user@gmail.com"
@@ -109,40 +127,41 @@ def render_login_page():
             st.session_state["user_email"] = "guest_user@example.com"
             st.rerun()
 
-# ==================== MAIN DASHBOARD ==================== #
-def render_dashboard():
-    # Sidebar
-    st.sidebar.markdown(f"### 👤 Signed In")
-    st.sidebar.caption(f"**{st.session_state['user_email']}**")
-    if st.sidebar.button("🚪 Sign Out"):
-        st.session_state["logged_in"] = False
-        st.rerun()
-        
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📌 Key Features")
-    
-    navigation = st.sidebar.radio(
-        "Select Feature Page:",
-        [
-            "💰 Total Expenses",
-            "➕ Add Expenses",
-            "📋 View Expenses",
-            "🔍 Search Expenses",
-            "📊 Category Report",
-            "✏️ Edit Expense",
-            "🗑️ Delete Expense",
-            "📈 Chart Analytics",
-            "📑 Financial Report",
-            "📅 Monthly Expenses",
-            "📥 Export Summary"
-        ]
-    )
+# ==================== MAIN HOME SCREEN ==================== #
+def render_home_dashboard():
+    # Top User Header Bar
+    head_col1, head_col2 = st.columns([3, 1])
+    with head_col1:
+        st.markdown("<h1 class='main-header'>Expense Tracker Dashboard</h1>", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! All features are available directly below.", unsafe_allow_html=True)
+    with head_col2:
+        st.write("")
+        if st.button("🚪 Sign Out", use_container_width=True):
+            st.session_state["logged_in"] = False
+            st.rerun()
+
+    st.markdown("---")
+
+    # ALL 11 KEY FEATURE OPTIONS PRESENTED DIRECTLY ON TOP HOME TABS
+    tabs = st.tabs([
+        "💰 Total Expenses",
+        "➕ Add Expenses",
+        "📋 View Expenses",
+        "🔍 Search Expenses",
+        "📊 Category Report",
+        "✏️ Edit Expense",
+        "🗑️ Delete Expense",
+        "📈 Chart Analytics",
+        "📑 Financial Report",
+        "📅 Monthly Expenses",
+        "📥 Export Summary"
+    ])
 
     df = pd.DataFrame(st.session_state["expenses"])
 
-    # 1. TOTAL EXPENSES
-    if navigation == "💰 Total Expenses":
-        st.title("💰 Total Expenses Summary")
+    # TAB 1: TOTAL EXPENSES (MAIN HOME SCREEN OVERVIEW)
+    with tabs[0]:
+        st.subheader("💰 Financial Summary & Key Feature Cards")
         
         if not df.empty:
             total_amount = df["amount"].sum()
@@ -155,20 +174,93 @@ def render_dashboard():
             c2.metric("Total Transactions", total_count)
             c3.metric("Average Expense", f"${avg_amount:,.2f}")
             c4.metric("Top Category", top_category)
-            
-            st.markdown("---")
-            st.subheader("Recent Expenses Activity")
-            st.dataframe(df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
-        else:
-            st.info("No expense data recorded yet.")
-
-    # 2. ADD EXPENSES
-    elif navigation == "➕ Add Expenses":
-        st.title("➕ Add New Expense")
         
-        with st.form("add_expense_form"):
+        st.markdown("---")
+        st.subheader("📌 Key Features Direct Access Grid")
+        st.write("Click any tab above or view summary actions directly on this home screen:")
+
+        # 11 Key Feature Shortcut Display Cards on Home Screen
+        f_col1, f_col2, f_col3 = st.columns(3)
+        with f_col1:
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>➕</div>
+                <div class='feature-title'>Add Expenses</div>
+                <div class='feature-desc'>Log new title, amount, category, date & payment method.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>📊</div>
+                <div class='feature-title'>Category Report</div>
+                <div class='feature-desc'>Percentage distribution of spending per category.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>📑</div>
+                <div class='feature-title'>Financial Report</div>
+                <div class='feature-desc'>Comprehensive statement breakdown of accounts.</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with f_col2:
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>🔍</div>
+                <div class='feature-title'>Search Expenses</div>
+                <div class='feature-desc'>Instant keyword, category & payment method search.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>✏️</div>
+                <div class='feature-title'>Edit Expense</div>
+                <div class='feature-desc'>Modify details of any existing expense record.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>📅</div>
+                <div class='feature-title'>Monthly Expenses</div>
+                <div class='feature-desc'>Month-by-month historical spend comparison.</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with f_col3:
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>📋</div>
+                <div class='feature-title'>View Expenses</div>
+                <div class='feature-desc'>Full interactive tabular transaction records.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>🗑️</div>
+                <div class='feature-title'>Delete Expense</div>
+                <div class='feature-desc'>Remove expense records from database.</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>📈</div>
+                <div class='feature-title'>Chart Analytics & 📥 Export</div>
+                <div class='feature-desc'>Visual Plotly charts & CSV/JSON downloads.</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+        st.subheader("📋 Recent Transaction History")
+        if not df.empty:
+            st.dataframe(df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
+
+    # TAB 2: ADD EXPENSES
+    with tabs[1]:
+        st.subheader("➕ Add New Expense Entry")
+        with st.form("add_expense_form_home"):
             col_a, col_b = st.columns(2)
-            title = col_a.text_input("Expense Title", placeholder="e.g. Grocery Shopping")
+            title = col_a.text_input("Expense Title", placeholder="e.g. Supermarket Groceries")
             amount = col_b.number_input("Amount ($)", min_value=0.01, step=1.0)
             
             col_c, col_d, col_e = st.columns(3)
@@ -176,9 +268,9 @@ def render_dashboard():
             exp_date = col_d.date_input("Date", datetime.today())
             payment_method = col_e.selectbox("Payment Method", ["Credit Card", "Debit Card", "UPI / Online Transfer", "Cash"])
             
-            notes = st.text_area("Notes (Optional)", placeholder="Additional details...")
+            notes = st.text_area("Notes (Optional)", placeholder="Add additional details...")
             
-            submitted = st.form_submit_button("Submit Expense", use_container_width=True)
+            submitted = st.form_submit_button("Save Expense", use_container_width=True)
             if submitted:
                 if title:
                     new_item = {
@@ -191,27 +283,26 @@ def render_dashboard():
                         "notes": notes
                     }
                     st.session_state["expenses"].insert(0, new_item)
-                    st.success(f"Successfully added expense: {title} (${amount:.2f})")
+                    st.success(f"Added: {title} (${amount:.2f})")
                     st.rerun()
                 else:
                     st.error("Please enter an expense title.")
 
-    # 3. VIEW EXPENSES
-    elif navigation == "📋 View Expenses":
-        st.title("📋 View All Expenses")
+    # TAB 3: VIEW EXPENSES
+    with tabs[2]:
+        st.subheader("📋 View All Recorded Expenses")
         if not df.empty:
             st.dataframe(df, use_container_width=True)
         else:
-            st.info("No expenses found.")
+            st.info("No expense items found.")
 
-    # 4. SEARCH EXPENSES
-    elif navigation == "🔍 Search Expenses":
-        st.title("🔍 Search & Filter Expenses")
-        
+    # TAB 4: SEARCH EXPENSES
+    with tabs[3]:
+        st.subheader("🔍 Search & Filter Expenses")
         col_s1, col_s2, col_s3 = st.columns(3)
-        keyword = col_s1.text_input("Search Keyword", placeholder="Title or notes...")
-        category_filter = col_s2.selectbox("Filter Category", ["ALL"] + list(df["category"].unique() if not df.empty else []))
-        payment_filter = col_s3.selectbox("Filter Payment Method", ["ALL"] + list(df["payment_method"].unique() if not df.empty else []))
+        keyword = col_s1.text_input("Search Keyword", placeholder="Search title or notes...")
+        category_filter = col_s2.selectbox("Category Filter", ["ALL"] + list(df["category"].unique() if not df.empty else []))
+        payment_filter = col_s3.selectbox("Payment Method Filter", ["ALL"] + list(df["payment_method"].unique() if not df.empty else []))
         
         filtered_df = df.copy()
         if not filtered_df.empty:
@@ -222,35 +313,35 @@ def render_dashboard():
             if payment_filter != "ALL":
                 filtered_df = filtered_df[filtered_df["payment_method"] == payment_filter]
                 
-            st.write(f"Found {len(filtered_df)} matching transactions:")
+            st.write(f"Showing {len(filtered_df)} matching results:")
             st.dataframe(filtered_df, use_container_width=True)
 
-    # 5. CATEGORY REPORT
-    elif navigation == "📊 Category Report":
-        st.title("📊 Category Breakdown Report")
+    # TAB 5: CATEGORY REPORT
+    with tabs[4]:
+        st.subheader("📊 Category Report & Distribution")
         if not df.empty:
             cat_df = df.groupby("category")["amount"].agg(["sum", "count"]).reset_index()
-            cat_df.columns = ["Category", "Total Spent ($)", "Transaction Count"]
+            cat_df.columns = ["Category", "Total Spent ($)", "Count"]
             total_sum = cat_df["Total Spent ($)"].sum()
             cat_df["Percentage (%)"] = (cat_df["Total Spent ($)"] / total_sum * 100).round(1)
             
             st.dataframe(cat_df.sort_values(by="Total Spent ($)", ascending=False), use_container_width=True)
             
-            fig = px.pie(cat_df, names="Category", values="Total Spent ($)", title="Category Spend Percentage", hole=0.4)
+            fig = px.pie(cat_df, names="Category", values="Total Spent ($)", title="Category Share (%)", hole=0.4)
             st.plotly_chart(fig, use_container_width=True)
 
-    # 6. EDIT EXPENSE
-    elif navigation == "✏️ Edit Expense":
-        st.title("✏️ Edit Expense Entry")
+    # TAB 6: EDIT EXPENSE
+    with tabs[5]:
+        st.subheader("✏️ Edit Existing Expense")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} (${row['amount']})": row['id'] for _, row in df.iterrows()}
-            selected_label = st.selectbox("Select Expense to Edit:", list(expense_options.keys()))
+            selected_label = st.selectbox("Choose Expense to Edit:", list(expense_options.keys()))
             selected_id = expense_options[selected_label]
             
             selected_item = next((item for item in st.session_state["expenses"] if item["id"] == selected_id), None)
             
             if selected_item:
-                with st.form("edit_form"):
+                with st.form("edit_form_home"):
                     edit_title = st.text_input("Title", value=selected_item["title"])
                     edit_amount = st.number_input("Amount ($)", value=float(selected_item["amount"]), step=1.0)
                     edit_category = st.selectbox("Category", ["Groceries", "Food & Dining", "Transportation", "Utilities & Bills", "Shopping", "Entertainment", "Health & Medical", "Other"], index=0)
@@ -258,63 +349,58 @@ def render_dashboard():
                     edit_payment = st.selectbox("Payment Method", ["Credit Card", "Debit Card", "UPI / Online Transfer", "Cash"], index=0)
                     edit_notes = st.text_area("Notes", value=selected_item.get("notes", ""))
                     
-                    if st.form_submit_button("Save Changes"):
+                    if st.form_submit_button("Update Expense"):
                         selected_item["title"] = edit_title
                         selected_item["amount"] = edit_amount
                         selected_item["category"] = edit_category
                         selected_item["date"] = str(edit_date)
                         selected_item["payment_method"] = edit_payment
                         selected_item["notes"] = edit_notes
-                        st.success("Expense updated successfully!")
+                        st.success("Expense details updated successfully!")
                         st.rerun()
 
-    # 7. DELETE EXPENSE
-    elif navigation == "🗑️ Delete Expense":
-        st.title("🗑️ Delete Expense Entry")
+    # TAB 7: DELETE EXPENSE
+    with tabs[6]:
+        st.subheader("🗑️ Delete Expense Entry")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} (${row['amount']})": row['id'] for _, row in df.iterrows()}
-            selected_label = st.selectbox("Select Expense to Delete:", list(expense_options.keys()))
+            selected_label = st.selectbox("Choose Expense to Delete:", list(expense_options.keys()))
             selected_id = expense_options[selected_label]
             
-            if st.button("❌ Confirm Delete Expense", type="primary"):
+            if st.button("❌ Confirm Delete", type="primary"):
                 st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_id]
                 st.success("Expense deleted successfully!")
                 st.rerun()
 
-    # 8. CHART ANALYTICS
-    elif navigation == "📈 Chart Analytics":
-        st.title("📈 Visual Chart Analytics")
+    # TAB 8: CHART ANALYTICS
+    with tabs[7]:
+        st.subheader("📈 Interactive Chart Analytics")
         if not df.empty:
-            col_ch1, col_ch2 = st.columns(2)
-            
-            with col_ch1:
-                fig_pie = px.pie(df, names="category", values="amount", title="Category Share", hole=0.3)
+            c_ch1, c_ch2 = st.columns(2)
+            with c_ch1:
+                fig_pie = px.pie(df, names="category", values="amount", title="Category Distribution", hole=0.3)
                 st.plotly_chart(fig_pie, use_container_width=True)
-                
-            with col_ch2:
+            with c_ch2:
                 df["month"] = df["date"].str.slice(0, 7)
                 monthly_df = df.groupby("month")["amount"].sum().reset_index()
-                fig_bar = px.bar(monthly_df, x="month", y="amount", title="Monthly Expense Trend", labels={"amount": "Amount ($)", "month": "Month"})
+                fig_bar = px.bar(monthly_df, x="month", y="amount", title="Monthly Spending Trend", labels={"amount": "Amount ($)", "month": "Month"})
                 st.plotly_chart(fig_bar, use_container_width=True)
 
-    # 9. FINANCIAL REPORT
-    elif navigation == "📑 Financial Report":
-        st.title("📑 Financial Statement Report")
+    # TAB 9: FINANCIAL REPORT
+    with tabs[8]:
+        st.subheader("📑 Financial Statement Report")
         if not df.empty:
-            st.markdown(f"**Report Generated for User:** `{st.session_state['user_email']}`")
-            st.markdown(f"**Date:** `{datetime.now().strftime('%B %d, %Y')}`")
-            
+            st.markdown(f"**Report Account:** `{st.session_state['user_email']}` | **Date:** `{datetime.now().strftime('%B %d, %Y')}`")
             summary_df = df.groupby("category").agg(
                 Total_Amount=("amount", "sum"),
                 Transaction_Count=("amount", "count"),
                 Average_Amount=("amount", "mean")
             ).reset_index()
-            
             st.dataframe(summary_df, use_container_width=True)
 
-    # 10. MONTHLY EXPENSES
-    elif navigation == "📅 Monthly Expenses":
-        st.title("📅 Monthly Expenses Breakdown")
+    # TAB 10: MONTHLY EXPENSES
+    with tabs[9]:
+        st.subheader("📅 Monthly Expenses Breakdown")
         if not df.empty:
             df["Month-Year"] = df["date"].str.slice(0, 7)
             month_df = df.groupby("Month-Year").agg(
@@ -322,32 +408,29 @@ def render_dashboard():
                 Item_Count=("amount", "count"),
                 Average_Spend=("amount", "mean")
             ).reset_index().sort_values(by="Month-Year", ascending=False)
-            
             st.dataframe(month_df, use_container_width=True)
 
-    # 11. EXPORT SUMMARY
-    elif navigation == "📥 Export Summary":
-        st.title("📥 Export Expense Summary")
+    # TAB 11: EXPORT SUMMARY
+    with tabs[10]:
+        st.subheader("📥 Export Summary Data")
         if not df.empty:
             csv_data = df.to_csv(index=False).encode('utf-8')
             json_data = json.dumps(st.session_state["expenses"], indent=2)
             
-            c_exp1, c_exp2 = st.columns(2)
-            with c_exp1:
-                st.subheader("Export CSV File")
+            e_col1, e_col2 = st.columns(2)
+            with e_col1:
                 st.download_button(
-                    label="📄 Download CSV Report",
+                    label="📄 Download CSV File",
                     data=csv_data,
-                    file_name=f"expense_report_{datetime.now().strftime('%Y%m%d')}.csv",
+                    file_name=f"expense_summary_{datetime.now().strftime('%Y%m%d')}.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
-            with c_exp2:
-                st.subheader("Export JSON Data")
+            with e_col2:
                 st.download_button(
-                    label="code Download JSON Backup",
+                    label="code Download JSON File",
                     data=json_data,
-                    file_name=f"expense_backup_{datetime.now().strftime('%Y%m%d')}.json",
+                    file_name=f"expense_summary_{datetime.now().strftime('%Y%m%d')}.json",
                     mime="application/json",
                     use_container_width=True
                 )
@@ -357,4 +440,4 @@ if __name__ == "__main__":
     if not st.session_state["logged_in"]:
         render_login_page()
     else:
-        render_dashboard()
+        render_home_dashboard()
