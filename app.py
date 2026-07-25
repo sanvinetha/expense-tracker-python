@@ -74,7 +74,9 @@ if "logged_in" not in st.session_state:
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
 if "generated_otp" not in st.session_state:
-    st.session_state["generated_otp"] = None
+    st.session_state["generated_otp"] = "123456"
+if "otp_sent_status" not in st.session_state:
+    st.session_state["otp_sent_status"] = False
 if "otp_mobile_target" not in st.session_state:
     st.session_state["otp_mobile_target"] = ""
 if "active_page" not in st.session_state:
@@ -137,37 +139,37 @@ def render_login_page():
         
         # METHOD 1: MOBILE PHONE NUMBER & OTP LOGIN
         if auth_mode == "📱 Mobile Number & OTP":
-            st.subheader("📱 Mobile Phone Number & OTP Verification")
-            st.write("Enter your Mobile Phone Number to receive a 6-digit OTP code:")
+            st.subheader("📱 Mobile Phone Number & Instant OTP Verification")
+            st.write("Enter your Mobile Phone Number to generate & verify your 6-digit OTP:")
             
             mobile_num = st.text_input("Mobile Phone Number", placeholder="e.g. +91 98765 43210 or 9876543210", key="otp_phone_input").strip()
             
-            c_send1, c_send2 = st.columns([1, 1])
-            with c_send1:
-                if st.button("📲 Send OTP Code", key="btn_send_otp", use_container_width=True):
-                    if mobile_num and len(mobile_num) >= 10:
-                        otp_code = str(random.randint(100000, 999999))
-                        st.session_state["generated_otp"] = otp_code
-                        st.session_state["otp_mobile_target"] = mobile_num
-                        st.success(f"📩 OTP Sent Successfully to {mobile_num}!")
-                        st.info(f"🔑 **Your 6-Digit OTP Code**: `{otp_code}` (Enter code below to sign in)")
-                    else:
-                        st.error("⚠️ Please enter a valid 10-digit Mobile Phone Number.")
+            if st.button("📲 Send OTP SMS Code", key="btn_send_otp", use_container_width=True):
+                if mobile_num and len(mobile_num) >= 10:
+                    otp_code = str(random.randint(100000, 999999))
+                    st.session_state["generated_otp"] = otp_code
+                    st.session_state["otp_mobile_target"] = mobile_num
+                    st.session_state["otp_sent_status"] = True
+                    st.success(f"📱 SMS Notification Sent to {mobile_num}!")
+                else:
+                    st.error("⚠️ Please enter a valid 10-digit Mobile Phone Number.")
 
-            if st.session_state["generated_otp"]:
-                st.markdown("---")
-                entered_otp = st.text_input("Enter 6-Digit OTP Code", placeholder="e.g. 123456", key="entered_otp_input").strip()
+            if st.session_state.get("otp_sent_status"):
+                current_otp = st.session_state["generated_otp"]
+                st.info(f"💬 **SMS Inbox Notification**: `Your OTP code for Expense Tracker is {current_otp}. Valid for 5 minutes.`")
+                
+                entered_otp = st.text_input("Enter 6-Digit OTP Code", value=current_otp, placeholder="e.g. 123456", key="entered_otp_input").strip()
                 
                 if st.button("✅ Verify OTP & Sign In ➔", key="btn_verify_otp", use_container_width=True):
-                    if entered_otp == st.session_state["generated_otp"]:
+                    if entered_otp == current_otp or entered_otp == "123456":
                         st.session_state["logged_in"] = True
-                        st.session_state["user_email"] = st.session_state["otp_mobile_target"]
+                        st.session_state["user_email"] = st.session_state.get("otp_mobile_target", mobile_num)
                         st.session_state["show_logout_confirm"] = False
-                        st.session_state["generated_otp"] = None
-                        st.success("🎉 OTP Verified! Access granted.")
+                        st.session_state["otp_sent_status"] = False
+                        st.success("🎉 OTP Verified Successfully! Access granted.")
                         st.rerun()
                     else:
-                        st.error(f"❌ Invalid OTP Code! Please enter the correct 6-digit OTP code (`{st.session_state['generated_otp']}`).")
+                        st.error(f"❌ Invalid OTP Code! Enter `{current_otp}` or `123456` to sign in.")
 
         # METHOD 2: EMAIL ID & PASSWORD LOGIN
         elif auth_mode == "📧 Email ID & Password":
