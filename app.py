@@ -46,6 +46,24 @@ st.markdown("""
         display: inline-block;
         white-space: nowrap !important;
     }
+    .github-link {
+        color: #f8fafc !important;
+        background: rgba(30, 41, 59, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.35rem 0.85rem;
+        border-radius: 8px;
+        text-decoration: none !important;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-block;
+        margin: 0.3rem;
+        transition: all 0.2s ease;
+    }
+    .github-link:hover {
+        border-color: #3b82f6 !important;
+        color: #38bdf8 !important;
+        transform: translateY(-1px);
+    }
     .savings-card {
         background: rgba(16, 185, 129, 0.12);
         border: 1px solid rgba(16, 185, 129, 0.3);
@@ -141,7 +159,9 @@ def render_bottom_author_footer():
     st.markdown("---")
     st.markdown("""
         <div style='text-align: center; margin-top: 1.5rem; margin-bottom: 1.5rem;'>
-            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>
+            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span><br><br>
+            <a class='github-link' href='https://github.com/dudipalahemanthreddy2007-cloud?tab=repositories' target='_blank'>💻 Hemanth Reddy (GitHub)</a>
+            <a class='github-link' href='https://github.com/sanvinetha' target='_blank'>💻 Sanvi Netha (GitHub)</a>
         </div>
     """, unsafe_allow_html=True)
 
@@ -150,7 +170,13 @@ def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header' style='text-align: center;'>Manage your personal expenses, budgets & savings in {curr}</p>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center;'><span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span></div><br>", unsafe_allow_html=True)
+    st.markdown("""
+        <div style='text-align: center;'>
+            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span><br><br>
+            <a class='github-link' href='https://github.com/dudipalahemanthreddy2007-cloud?tab=repositories' target='_blank'>💻 Hemanth Reddy (GitHub)</a>
+            <a class='github-link' href='https://github.com/sanvinetha' target='_blank'>💻 Sanvi Netha (GitHub)</a>
+        </div><br>
+    """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -294,7 +320,7 @@ def render_app():
         c3.metric("Net Savings", fmt_amt(net_sav))
         c4.metric("Financial Health Score", f"{health_score} / 100")
 
-        # 3. DEVELOPER CREDIT BADGE AT TOTAL BOTTOM OF PAGE (BELOW FINANCIAL SUMMARY)
+        # 3. DEVELOPER CREDIT BADGE & GITHUB PROFILES AT TOTAL BOTTOM OF PAGE
         render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: TOTAL EXPENSES =================
