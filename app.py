@@ -6,7 +6,7 @@ import json
 
 # Page Configuration for Streamlit Cloud
 st.set_page_config(
-    page_title="Expense Tracker Python",
+    page_title="Expense Tracker",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -72,19 +72,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State Data (Amounts in Indian Rupees ₹)
+# Initialize Session State Data (Empty list by default - No mock data)
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
 if "expenses" not in st.session_state:
-    st.session_state["expenses"] = [
-        {"id": 101, "title": "Supermarket Groceries", "amount": 2450.00, "category": "Groceries", "date": "2026-07-24", "payment_method": "UPI / Online Transfer", "notes": "Weekly household food & vegetables"},
-        {"id": 102, "title": "Electricity Bill", "amount": 1850.00, "category": "Utilities & Bills", "date": "2026-07-20", "payment_method": "UPI / Online Transfer", "notes": "Monthly electricity bill"},
-        {"id": 103, "title": "Restaurant Family Dinner", "amount": 1640.00, "category": "Food & Dining", "date": "2026-07-18", "payment_method": "Credit Card", "notes": "Weekend dinner"},
-        {"id": 104, "title": "Petrol Refill", "amount": 1200.00, "category": "Transportation", "date": "2026-07-15", "payment_method": "Debit Card", "notes": "Fuel for car"},
-        {"id": 105, "title": "Online Shopping", "amount": 3499.00, "category": "Shopping", "date": "2026-07-10", "payment_method": "Credit Card", "notes": "Headphones purchase"}
-    ]
+    st.session_state["expenses"] = []  # Start completely empty!
 
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
@@ -129,8 +123,8 @@ def render_home_dashboard():
     # Top User Header Bar
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
-        st.markdown("<h1 class='main-header'>Expense Tracker Dashboard (₹)</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! All features in Indian Rupees (₹) are available directly below.", unsafe_allow_html=True)
+        st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track your expenses in Rupees (₹).", unsafe_allow_html=True)
     with head_col2:
         st.write("")
         if st.button("🚪 Sign Out", use_container_width=True):
@@ -171,10 +165,11 @@ def render_home_dashboard():
             c2.metric("Total Transactions", total_count)
             c3.metric("Average Expense", f"₹{avg_amount:,.2f}")
             c4.metric("Top Category", top_category)
+        else:
+            st.info("💡 No expenses added yet. Click on the '➕ Add Expenses' tab to log your first expense!")
         
         st.markdown("---")
         st.subheader("📌 Key Features Direct Access Grid")
-        st.write("Click any tab above or view summary actions directly on this home screen:")
 
         # 11 Key Feature Shortcut Display Cards on Home Screen
         f_col1, f_col2, f_col3 = st.columns(3)
@@ -253,6 +248,8 @@ def render_home_dashboard():
             display_df = df.copy()
             display_df["amount"] = display_df["amount"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(display_df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
+        else:
+            st.write("No recent transactions. Added expenses will appear here.")
 
     # TAB 2: ADD EXPENSES
     with tabs[1]:
@@ -295,18 +292,18 @@ def render_home_dashboard():
             view_df["amount"] = view_df["amount"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(view_df, use_container_width=True)
         else:
-            st.info("No expense items found.")
+            st.info("No expenses logged yet. Add your first expense using the '➕ Add Expenses' tab.")
 
     # TAB 4: SEARCH EXPENSES
     with tabs[3]:
         st.subheader("🔍 Search & Filter Expenses")
-        col_s1, col_s2, col_s3 = st.columns(3)
-        keyword = col_s1.text_input("Search Keyword", placeholder="Search title or notes...")
-        category_filter = col_s2.selectbox("Category Filter", ["ALL"] + list(df["category"].unique() if not df.empty else []))
-        payment_filter = col_s3.selectbox("Payment Method Filter", ["ALL"] + list(df["payment_method"].unique() if not df.empty else []))
-        
-        filtered_df = df.copy()
-        if not filtered_df.empty:
+        if not df.empty:
+            col_s1, col_s2, col_s3 = st.columns(3)
+            keyword = col_s1.text_input("Search Keyword", placeholder="Search title or notes...")
+            category_filter = col_s2.selectbox("Category Filter", ["ALL"] + list(df["category"].unique()))
+            payment_filter = col_s3.selectbox("Payment Method Filter", ["ALL"] + list(df["payment_method"].unique()))
+            
+            filtered_df = df.copy()
             if keyword:
                 filtered_df = filtered_df[filtered_df["title"].str.contains(keyword, case=False, na=False) | filtered_df["notes"].str.contains(keyword, case=False, na=False)]
             if category_filter != "ALL":
@@ -317,6 +314,8 @@ def render_home_dashboard():
             st.write(f"Showing {len(filtered_df)} matching results:")
             filtered_df["amount"] = filtered_df["amount"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(filtered_df, use_container_width=True)
+        else:
+            st.info("No expenses available to search. Add an expense first.")
 
     # TAB 5: CATEGORY REPORT
     with tabs[4]:
@@ -331,6 +330,8 @@ def render_home_dashboard():
             
             fig = px.pie(cat_df, names="Category", values="Total Spent (₹)", title="Category Share (%)", hole=0.4)
             st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No category data available yet. Add an expense first.")
 
     # TAB 6: EDIT EXPENSE
     with tabs[5]:
@@ -360,6 +361,8 @@ def render_home_dashboard():
                         selected_item["notes"] = edit_notes
                         st.success("Expense updated successfully!")
                         st.rerun()
+        else:
+            st.info("No expenses available to edit.")
 
     # TAB 7: DELETE EXPENSE
     with tabs[6]:
@@ -373,6 +376,8 @@ def render_home_dashboard():
                 st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_id]
                 st.success("Expense deleted successfully!")
                 st.rerun()
+        else:
+            st.info("No expenses available to delete.")
 
     # TAB 8: CHART ANALYTICS
     with tabs[7]:
@@ -387,6 +392,8 @@ def render_home_dashboard():
                 monthly_df = df.groupby("month")["amount"].sum().reset_index()
                 fig_bar = px.bar(monthly_df, x="month", y="amount", title="Monthly Spending Trend (₹)", labels={"amount": "Amount (₹)", "month": "Month"})
                 st.plotly_chart(fig_bar, use_container_width=True)
+        else:
+            st.info("No charts to display yet. Add an expense first.")
 
     # TAB 9: FINANCIAL REPORT
     with tabs[8]:
@@ -401,6 +408,8 @@ def render_home_dashboard():
             summary_df["Total_Amount_Rupees"] = summary_df["Total_Amount_Rupees"].apply(lambda x: f"₹{x:,.2f}")
             summary_df["Average_Amount_Rupees"] = summary_df["Average_Amount_Rupees"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(summary_df, use_container_width=True)
+        else:
+            st.info("No financial report available. Add an expense first.")
 
     # TAB 10: MONTHLY EXPENSES
     with tabs[9]:
@@ -416,6 +425,8 @@ def render_home_dashboard():
             month_df["Total_Spent"] = month_df["Total_Spent"].apply(lambda x: f"₹{x:,.2f}")
             month_df["Average_Spend"] = month_df["Average_Spend"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(month_df, use_container_width=True)
+        else:
+            st.info("No monthly expense records available yet.")
 
     # TAB 11: EXPORT SUMMARY
     with tabs[10]:
@@ -441,6 +452,8 @@ def render_home_dashboard():
                     mime="application/json",
                     use_container_width=True
                 )
+        else:
+            st.info("No expense data available to export. Add an expense first.")
 
 # Main Application Entrypoint
 if __name__ == "__main__":
