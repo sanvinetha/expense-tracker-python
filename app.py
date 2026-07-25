@@ -12,9 +12,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Navigation & Layout
+# Custom CSS for Hiding Streamlit Toolbar (Fork, GitHub, Menu) & Layout Styling
 st.markdown("""
     <style>
+    /* HIDE STREAMLIT HEADER, TOOLBAR, FORK BUTTON, AND GITHUB ICON */
+    #MainMenu {visibility: hidden !important;}
+    header {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+    [data-testid="stHeader"] {display: none !important;}
+    [data-testid="stToolbar"] {display: none !important;}
+    .stAppHeader {display: none !important;}
+    
     .main-header {
         font-family: 'Outfit', sans-serif;
         font-size: 2.5rem;
