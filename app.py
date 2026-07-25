@@ -51,13 +51,14 @@ st.markdown("""
     }
     div.stButton > button {
         border-radius: 12px !important;
-        padding: 0.75rem 1.25rem !important;
+        padding: 0.85rem 1.25rem !important;
         font-weight: 700 !important;
-        font-size: 1rem !important;
+        font-size: 1.05rem !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         background: rgba(30, 41, 59, 0.8) !important;
         color: #f8fafc !important;
         transition: all 0.25s ease !important;
+        margin-bottom: 0.5rem !important;
     }
     div.stButton > button:hover {
         border-color: #3b82f6 !important;
@@ -185,41 +186,37 @@ def render_app():
     inc_df = pd.DataFrame(st.session_state["incomes"])
     current_page = st.session_state["active_page"]
 
-    # ================= HOME PAGE SLIDE (FEATURES FIRST, FINANCIAL SUMMARY AT BOTTOM) =================
+    # ================= HOME PAGE SLIDE (FEATURES FIRST WITHOUT DESCRIPTIONS, FINANCIAL SUMMARY AT BOTTOM) =================
     if current_page == "HOME":
-        # ➕ Add Expenses is placed at 3rd place in the first line!
-        features_grid = [
-            ("💰 Total Expenses", "View full overview & metrics"),
-            ("💡 Save Money", "Cut unnecessary expenses & save 30%"),
-            ("➕ Add Expenses", "Log new spending transactions"),
-            ("🎯 Budget & Goals", "Category spending limits & alerts"),
-            ("💵 Income & Savings", "Track income streams & net savings"),
-            ("🔔 Bill Reminders", "Upcoming subscription bill dates"),
-            ("📋 View Expenses", "Full transaction history table"),
-            ("🔍 Search Expenses", "Filter transactions by category"),
-            ("📊 Category Report", "Breakdown by spending category"),
-            ("✏️ Edit Expense", "Update existing expense entries"),
-            ("🗑️ Delete Expense", "Remove unwanted transactions"),
-            ("📈 Chart Analytics", "Plotly pie & trend bar charts"),
-            ("📑 Financial Report", "Itemized category statement"),
-            ("📅 Monthly Expenses", "Month-by-month spending history"),
-            ("📥 Export Summary", "Download CSV and JSON summary")
+        features_list = [
+            "💰 Total Expenses",
+            "💡 Save Money",
+            "➕ Add Expenses",
+            "🎯 Budget & Goals",
+            "💵 Income & Savings",
+            "🔔 Bill Reminders",
+            "📋 View Expenses",
+            "🔍 Search Expenses",
+            "📊 Category Report",
+            "✏️ Edit Expense",
+            "🗑️ Delete Expense",
+            "📈 Chart Analytics",
+            "📑 Financial Report",
+            "📅 Monthly Expenses",
+            "📥 Export Summary"
         ]
 
-        # 1. FEATURES GRID AT THE TOP
-        for row_idx in range(0, len(features_grid), 3):
+        # 1. CLEAN FEATURES BUTTON GRID AT THE TOP (NO DESCRIPTIONS BELOW BUTTONS)
+        for row_idx in range(0, len(features_list), 3):
             cols = st.columns(3)
             for col_idx in range(3):
                 item_idx = row_idx + col_idx
-                if item_idx < len(features_grid):
-                    title, desc = features_grid[item_idx]
+                if item_idx < len(features_list):
+                    feature_title = features_list[item_idx]
                     with cols[col_idx]:
-                        # BUTTON TEXT IS EXACT FEATURE NAME ONLY (NO 'Open' PREFIX)
-                        if st.button(title, key=f"grid_btn_{item_idx}", use_container_width=True):
-                            set_page(title)
+                        if st.button(feature_title, key=f"grid_btn_{item_idx}", use_container_width=True):
+                            set_page(feature_title)
                             st.rerun()
-                        st.caption(desc)
-                        st.markdown("<br>", unsafe_allow_html=True)
 
         st.markdown("---")
 
