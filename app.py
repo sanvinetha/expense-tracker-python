@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Interactive Cards and Styled Buttons
+# Custom CSS for Navigation & Layout
 st.markdown("""
     <style>
     .main-header {
@@ -42,27 +42,20 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 0.25rem;
     }
-    /* Style all action buttons to look like rich cards */
     div.stButton > button {
-        border-radius: 12px !important;
-        padding: 1rem 1.25rem !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1rem !important;
         font-weight: 700 !important;
-        font-size: 1rem !important;
+        font-size: 0.95rem !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
         background: rgba(30, 41, 59, 0.7) !important;
         color: #f8fafc !important;
         transition: all 0.2s ease !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }
     div.stButton > button:hover {
         border-color: #3b82f6 !important;
         background: linear-gradient(135deg, #1e293b, #334155) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(59, 130, 246, 0.3) !important;
-    }
-    .nav-pill-active button {
-        background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
-        border-color: #6366f1 !important;
+        transform: translateY(-1px) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -81,7 +74,6 @@ if "eliminated_savings" not in st.session_state:
 
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
-# Function to safely switch pages
 def set_page(page_name):
     st.session_state["active_page"] = page_name
 
@@ -122,9 +114,8 @@ def render_login_page():
             st.session_state["user_email"] = "guest_user@example.com"
             st.rerun()
 
-# ==================== MAIN HOME SCREEN ==================== #
+# ==================== MAIN DASHBOARD ==================== #
 def render_home_dashboard():
-    # Top User Header Bar
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
@@ -137,7 +128,7 @@ def render_home_dashboard():
 
     st.markdown("---")
 
-    # TOP INTERACTIVE NAVIGATION BUTTONS BAR
+    # CLEAN TOP NAVIGATION MENU BUTTONS ONLY
     page_options = [
         "💰 Total Expenses",
         "💡 Save Money",
@@ -153,7 +144,6 @@ def render_home_dashboard():
         "📥 Export Summary"
     ]
 
-    # Render top interactive menu buttons across 6 columns x 2 rows
     nav_cols_1 = st.columns(6)
     for idx, page in enumerate(page_options[:6]):
         with nav_cols_1[idx]:
@@ -177,7 +167,7 @@ def render_home_dashboard():
     df = pd.DataFrame(st.session_state["expenses"])
     current_page = st.session_state["active_page"]
 
-    # ================= PAGE 1: TOTAL EXPENSES (HOME OVERVIEW) =================
+    # ================= PAGE 1: TOTAL EXPENSES =================
     if current_page == "💰 Total Expenses":
         st.subheader("💰 Financial Summary (in ₹)")
         
@@ -192,67 +182,19 @@ def render_home_dashboard():
             c2.metric("Total Transactions", total_count)
             c3.metric("Average Expense", f"₹{avg_amount:,.2f}")
             c4.metric("Top Category", top_category)
-        else:
-            st.info("💡 No expenses added yet. Click on the '➕ Add Expenses' card below to log your first expense!")
-        
-        st.markdown("---")
-        st.subheader("📌 Key Features Direct Access Grid (Click Any Card Below)")
-
-        # 100% INTERACTIVE CLICKABLE CARDS GRID
-        grid_col1, grid_col2, grid_col3 = st.columns(3)
-        
-        with grid_col1:
-            if st.button("💡 Save Money & Cut Expenses\n\nIdentify unnecessary spending & see where money can be saved.", key="card_save", use_container_width=True):
-                set_page("💡 Save Money")
-                st.rerun()
-
-            if st.button("➕ Add Expenses\n\nLog new title, amount in ₹, category, date & payment method.", key="card_add", use_container_width=True):
-                set_page("➕ Add Expenses")
-                st.rerun()
-
-            if st.button("📊 Category Report\n\nPercentage distribution of spending in ₹ per category.", key="card_cat", use_container_width=True):
-                set_page("📊 Category Report")
-                st.rerun()
-
-        with grid_col2:
-            if st.button("🔍 Search Expenses\n\nInstant keyword, category & payment method search.", key="card_search", use_container_width=True):
-                set_page("🔍 Search Expenses")
-                st.rerun()
-
-            if st.button("✏️ Edit Expense\n\nModify details of any existing expense record in ₹.", key="card_edit", use_container_width=True):
-                set_page("✏️ Edit Expense")
-                st.rerun()
-
-            if st.button("📅 Monthly Expenses\n\nMonth-by-month historical spend comparison in ₹.", key="card_monthly", use_container_width=True):
-                set_page("📅 Monthly Expenses")
-                st.rerun()
-
-        with grid_col3:
-            if st.button("📋 View Expenses\n\nFull interactive tabular transaction records in ₹.", key="card_view", use_container_width=True):
-                set_page("📋 View Expenses")
-                st.rerun()
-
-            if st.button("🗑️ Delete Expense\n\nRemove expense records from database.", key="card_delete", use_container_width=True):
-                set_page("🗑️ Delete Expense")
-                st.rerun()
-
-            if st.button("📈 Chart Analytics & 📥 Export\n\nVisual Plotly charts & CSV/JSON downloads in Rupees.", key="card_chart", use_container_width=True):
-                set_page("📈 Chart Analytics")
-                st.rerun()
-
-        st.markdown("---")
-        st.subheader("📋 Recent Transaction History (₹)")
-        if not df.empty:
+            
+            st.markdown("---")
+            st.subheader("📋 Recent Transaction History (₹)")
             display_df = df.copy()
             display_df["amount"] = display_df["amount"].apply(lambda x: f"₹{x:,.2f}")
             st.dataframe(display_df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
         else:
-            st.write("No recent transactions. Added expenses will appear here.")
+            st.info("💡 No expenses added yet. Click on the '➕ Add Expenses' button above to log your first expense!")
 
     # ================= PAGE 2: SAVE MONEY =================
     elif current_page == "💡 Save Money":
         st.subheader("💡 Save Money & Cut Unnecessary Expenses")
-        st.write("Analyze your spending habits, detect unnecessary expenses, and discover exactly where money can be saved.")
+        st.write("Analyze spending habits, detect unnecessary expenses, and discover where money can be saved.")
         
         if not df.empty:
             non_essential_df = df[df["category"].isin(NON_ESSENTIAL_CATEGORIES)]
