@@ -64,6 +64,10 @@ st.markdown("""
         background: linear-gradient(135deg, #1e293b, #334155) !important;
         transform: translateY(-1px) !important;
     }
+    .back-btn button {
+        background: linear-gradient(135deg, #475569, #334155) !important;
+        border-color: #64748b !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -106,6 +110,14 @@ def set_page(page_name):
 def fmt_amt(amt):
     curr = st.session_state.get("currency_symbol", "₹")
     return f"{curr}{amt:,.2f}"
+
+def render_back_button():
+    b_col1, b_col2 = st.columns([1, 4])
+    with b_col1:
+        if st.button("🔙 Back to Home Dashboard", key="btn_back_home", use_container_width=True):
+            set_page("💰 Total Expenses")
+            st.rerun()
+    st.markdown("---")
 
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
@@ -255,6 +267,7 @@ def render_home_dashboard():
 
     # ================= PAGE 2: SAVE MONEY =================
     elif current_page == "💡 Save Money":
+        render_back_button()
         st.subheader("💡 Save Money & Cut Unnecessary Expenses")
         st.write("Analyze spending habits, detect unnecessary expenses, and discover where money can be saved.")
         
@@ -322,6 +335,7 @@ def render_home_dashboard():
 
     # ================= PAGE 3: BUDGET & GOALS =================
     elif current_page == "🎯 Budget & Goals":
+        render_back_button()
         st.subheader("🎯 Category Monthly Budget Limits & Alerts")
         st.write("Set category monthly spending caps and monitor live budget progress alerts.")
         
@@ -359,6 +373,7 @@ def render_home_dashboard():
 
     # ================= PAGE 4: INCOME & SAVINGS =================
     elif current_page == "💵 Income & Savings":
+        render_back_button()
         st.subheader("💵 Income Sources & Net Savings Calculator")
         
         with st.form("add_income_form"):
@@ -389,6 +404,7 @@ def render_home_dashboard():
 
     # ================= PAGE 5: BILL REMINDERS =================
     elif current_page == "🔔 Bill Reminders":
+        render_back_button()
         st.subheader("🔔 Subscription & Bill Payment Reminders")
         st.write("Track upcoming recurring bill payments (Rent, Netflix, Electricity, Wifi).")
         
@@ -421,6 +437,7 @@ def render_home_dashboard():
 
     # ================= PAGE 6: ADD EXPENSES =================
     elif current_page == "➕ Add Expenses":
+        render_back_button()
         st.subheader(f"➕ Add New Expense Entry ({curr})")
         with st.form("add_expense_form_main"):
             col_a, col_b = st.columns(2)
@@ -454,6 +471,7 @@ def render_home_dashboard():
 
     # ================= PAGE 7: VIEW EXPENSES =================
     elif current_page == "📋 View Expenses":
+        render_back_button()
         st.subheader(f"📋 View All Recorded Expenses ({curr})")
         if not df.empty:
             view_df = df.copy()
@@ -464,6 +482,7 @@ def render_home_dashboard():
 
     # ================= PAGE 8: SEARCH EXPENSES =================
     elif current_page == "🔍 Search Expenses":
+        render_back_button()
         st.subheader("🔍 Search & Filter Expenses")
         if not df.empty:
             col_s1, col_s2, col_s3 = st.columns(3)
@@ -487,6 +506,7 @@ def render_home_dashboard():
 
     # ================= PAGE 9: CATEGORY REPORT =================
     elif current_page == "📊 Category Report":
+        render_back_button()
         st.subheader(f"📊 Category Report & Distribution ({curr})")
         if not df.empty:
             cat_df = df.groupby("category")["amount"].agg(["sum", "count"]).reset_index()
@@ -503,6 +523,7 @@ def render_home_dashboard():
 
     # ================= PAGE 10: EDIT EXPENSE =================
     elif current_page == "✏️ Edit Expense":
+        render_back_button()
         st.subheader(f"✏️ Edit Existing Expense ({curr})")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])})": row['id'] for _, row in df.iterrows()}
@@ -534,6 +555,7 @@ def render_home_dashboard():
 
     # ================= PAGE 11: DELETE EXPENSE =================
     elif current_page == "🗑️ Delete Expense":
+        render_back_button()
         st.subheader("🗑️ Delete Expense Entry")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])})": row['id'] for _, row in df.iterrows()}
@@ -549,6 +571,7 @@ def render_home_dashboard():
 
     # ================= PAGE 12: CHART ANALYTICS =================
     elif current_page == "📈 Chart Analytics":
+        render_back_button()
         st.subheader(f"📈 Interactive Chart Analytics ({curr})")
         if not df.empty:
             c_ch1, c_ch2 = st.columns(2)
@@ -565,6 +588,7 @@ def render_home_dashboard():
 
     # ================= PAGE 13: FINANCIAL REPORT =================
     elif current_page == "📑 Financial Report":
+        render_back_button()
         st.subheader(f"📑 Financial Statement Report ({curr})")
         if not df.empty:
             st.markdown(f"**Report Account:** `{st.session_state['user_email']}` | **Date:** `{datetime.now().strftime('%B %d, %Y')}`")
@@ -581,6 +605,7 @@ def render_home_dashboard():
 
     # ================= PAGE 14: MONTHLY EXPENSES =================
     elif current_page == "📅 Monthly Expenses":
+        render_back_button()
         st.subheader(f"📅 Monthly Expenses Breakdown ({curr})")
         if not df.empty:
             df["Month-Year"] = df["date"].str.slice(0, 7)
@@ -598,6 +623,7 @@ def render_home_dashboard():
 
     # ================= PAGE 15: EXPORT SUMMARY =================
     elif current_page == "📥 Export Summary":
+        render_back_button()
         st.subheader(f"📥 Export Summary Data ({curr})")
         if not df.empty:
             csv_data = df.to_csv(index=False).encode('utf-8')
