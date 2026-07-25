@@ -35,6 +35,17 @@ st.markdown("""
         color: #94a3b8;
         margin-bottom: 1.5rem;
     }
+    .author-badge {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.1);
+        padding: 0.35rem 0.85rem;
+        border-radius: 20px;
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        display: inline-block;
+        margin-top: 0.4rem;
+    }
     .savings-card {
         background: rgba(16, 185, 129, 0.12);
         border: 1px solid rgba(16, 185, 129, 0.3);
@@ -131,6 +142,7 @@ def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header' style='text-align: center;'>Manage your personal expenses, budgets & savings in {curr}</p>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center;'><span class='author-badge'>✨ Developed & Maintained by Dudipala Hemanth & Sanvinetha</span></div><br>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -187,11 +199,11 @@ def render_login_page():
 def render_app():
     curr = st.session_state.get("currency_symbol", "₹")
     
-    # TOP HEADER BAR
+    # TOP HEADER BAR WITH AUTHOR CREDIT BADGE
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**!", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! &nbsp; <span class='author-badge'>✨ Developed & Maintained by Dudipala Hemanth & Sanvinetha</span>", unsafe_allow_html=True)
     with head_col2:
         curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
         st.session_state["currency_symbol"] = curr_choice.split()[0]
