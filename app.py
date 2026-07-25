@@ -15,7 +15,6 @@ st.set_page_config(
 # Custom CSS for Hiding Streamlit Toolbar (Fork, GitHub, Menu) & Layout Styling
 st.markdown("""
     <style>
-    /* HIDE STREAMLIT HEADER, TOOLBAR, FORK BUTTON, AND GITHUB ICON */
     #MainMenu {visibility: hidden !important;}
     header {visibility: hidden !important;}
     footer {visibility: hidden !important;}
@@ -79,6 +78,8 @@ if "expenses" not in st.session_state:
     st.session_state["expenses"] = []
 if "eliminated_savings" not in st.session_state:
     st.session_state["eliminated_savings"] = 0.0
+if "show_logout_confirm" not in st.session_state:
+    st.session_state["show_logout_confirm"] = False
 
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
@@ -104,6 +105,7 @@ def render_login_page():
                 if identity and password:
                     st.session_state["logged_in"] = True
                     st.session_state["user_email"] = identity
+                    st.session_state["show_logout_confirm"] = False
                     st.success("Successfully signed in!")
                     st.rerun()
                 else:
@@ -114,12 +116,14 @@ def render_login_page():
         if st.button("🌐 Continue with Google Email ID", key="login_google", use_container_width=True):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "google_user@gmail.com"
+            st.session_state["show_logout_confirm"] = False
             st.success("Signed in with Google Email ID!")
             st.rerun()
             
         if st.button("🚀 Quick Demo Guest Login", key="login_guest", use_container_width=True):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "guest_user@example.com"
+            st.session_state["show_logout_confirm"] = False
             st.rerun()
 
 # ==================== MAIN DASHBOARD ==================== #
@@ -131,8 +135,21 @@ def render_home_dashboard():
     with head_col2:
         st.write("")
         if st.button("🚪 Sign Out", key="top_logout", use_container_width=True):
-            st.session_state["logged_in"] = False
-            st.rerun()
+            st.session_state["show_logout_confirm"] = True
+
+    # CONFIRM SIGN OUT MODAL / ALERT PROMPT
+    if st.session_state["show_logout_confirm"]:
+        st.warning("⚠️ **Confirm Sign Out**: Are you sure you want to sign out of Expense Tracker?")
+        btn_c1, btn_c2, btn_c3 = st.columns([1, 1, 2])
+        with btn_c1:
+            if st.button("✅ Yes, Sign Out", key="confirm_logout_yes", use_container_width=True):
+                st.session_state["logged_in"] = False
+                st.session_state["show_logout_confirm"] = False
+                st.rerun()
+        with btn_c2:
+            if st.button("❌ Cancel", key="confirm_logout_no", use_container_width=True):
+                st.session_state["show_logout_confirm"] = False
+                st.rerun()
 
     st.markdown("---")
 
