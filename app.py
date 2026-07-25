@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
-import random
 import json
 
 # Page Configuration for Streamlit Cloud
@@ -73,12 +72,6 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
-if "generated_otp" not in st.session_state:
-    st.session_state["generated_otp"] = "123456"
-if "otp_sent_status" not in st.session_state:
-    st.session_state["otp_sent_status"] = False
-if "otp_mobile_target" not in st.session_state:
-    st.session_state["otp_mobile_target"] = ""
 if "active_page" not in st.session_state:
     st.session_state["active_page"] = "💰 Total Expenses"
 if "currency_symbol" not in st.session_state:
@@ -105,12 +98,11 @@ if "eliminated_savings" not in st.session_state:
 if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
 
-# Registered Users Database (Identity -> Password)
+# Registered Email Users Database (Email ID -> Password)
 if "registered_users" not in st.session_state:
     st.session_state["registered_users"] = {
         "user@example.com": "Password123",
         "sanvinetha@gmail.com": "Sanvinetha@123",
-        "+91 98765 43210": "Pass@123",
         "guest_user@example.com": "GuestPass123"
     }
 
@@ -131,54 +123,19 @@ def render_login_page():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        auth_mode = st.radio("Choose Sign In Method:", [
-            "📱 Mobile Number & OTP",
+        auth_mode = st.radio("Choose Sign In Mode:", [
             "📧 Email ID & Password",
-            "📝 Register New Account"
+            "📝 Register New Email Account"
         ], horizontal=True)
         
-        # METHOD 1: MOBILE PHONE NUMBER & OTP LOGIN
-        if auth_mode == "📱 Mobile Number & OTP":
-            st.subheader("📱 Mobile Phone Number & Instant OTP Verification")
-            st.write("Enter your Mobile Phone Number to generate & verify your 6-digit OTP:")
-            
-            mobile_num = st.text_input("Mobile Phone Number", placeholder="e.g. +91 98765 43210 or 9876543210", key="otp_phone_input").strip()
-            
-            if st.button("📲 Send OTP SMS Code", key="btn_send_otp", use_container_width=True):
-                if mobile_num and len(mobile_num) >= 10:
-                    otp_code = str(random.randint(100000, 999999))
-                    st.session_state["generated_otp"] = otp_code
-                    st.session_state["otp_mobile_target"] = mobile_num
-                    st.session_state["otp_sent_status"] = True
-                    st.success(f"📱 SMS Notification Sent to {mobile_num}!")
-                else:
-                    st.error("⚠️ Please enter a valid 10-digit Mobile Phone Number.")
-
-            if st.session_state.get("otp_sent_status"):
-                current_otp = st.session_state["generated_otp"]
-                st.info(f"💬 **SMS Inbox Notification**: `Your OTP code for Expense Tracker is {current_otp}. Valid for 5 minutes.`")
-                
-                entered_otp = st.text_input("Enter 6-Digit OTP Code", value=current_otp, placeholder="e.g. 123456", key="entered_otp_input").strip()
-                
-                if st.button("✅ Verify OTP & Sign In ➔", key="btn_verify_otp", use_container_width=True):
-                    if entered_otp == current_otp or entered_otp == "123456":
-                        st.session_state["logged_in"] = True
-                        st.session_state["user_email"] = st.session_state.get("otp_mobile_target", mobile_num)
-                        st.session_state["show_logout_confirm"] = False
-                        st.session_state["otp_sent_status"] = False
-                        st.success("🎉 OTP Verified Successfully! Access granted.")
-                        st.rerun()
-                    else:
-                        st.error(f"❌ Invalid OTP Code! Enter `{current_otp}` or `123456` to sign in.")
-
-        # METHOD 2: EMAIL ID & PASSWORD LOGIN
-        elif auth_mode == "📧 Email ID & Password":
+        # EMAIL ID & PASSWORD SIGN IN ONLY
+        if auth_mode == "📧 Email ID & Password":
             st.subheader("📧 Email ID & Password Sign In")
             st.write("Enter your registered Email ID and Password:")
             
             with st.form("email_login_form"):
                 identity = st.text_input("Email ID", placeholder="e.g. sanvinetha@gmail.com or user@example.com").strip().lower()
-                password = st.text_input("Account Password", type="password", placeholder="Enter password")
+                password = st.text_input("Account Password", type="password", placeholder="Enter your original password")
                 submit_btn = st.form_submit_button("Sign In ➔", use_container_width=True)
                 
                 if submit_btn:
@@ -195,17 +152,17 @@ def render_login_page():
                         else:
                             st.error("❌ Incorrect Password! Access denied. Please enter the original password for this Email ID.")
                     else:
-                        st.error("❌ Account not found! Please register under 'Register New Account'.")
+                        st.error("❌ Email ID not registered! Please create an account under 'Register New Email Account'.")
 
             st.info("💡 **Demo Email Credentials**:\n- **Email**: `sanvinetha@gmail.com` | **Password**: `Sanvinetha@123`\n- **Email**: `user@example.com` | **Password**: `Password123`")
 
-        # METHOD 3: REGISTER NEW ACCOUNT
+        # REGISTER NEW EMAIL ACCOUNT
         else:
-            st.subheader("📝 Create New Account")
-            st.write("Register your Mobile Number or Email ID:")
+            st.subheader("📝 Register New Email Account")
+            st.write("Create your account by choosing an Email ID and Password:")
             
             with st.form("register_form"):
-                reg_identity = st.text_input("Email ID or Mobile Phone Number", placeholder="e.g. myemail@gmail.com or +91 98765 43210").strip().lower()
+                reg_identity = st.text_input("Email ID", placeholder="e.g. myname@gmail.com").strip().lower()
                 reg_password = st.text_input("Choose Password", type="password", placeholder="Create a password")
                 confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password")
                 reg_submit = st.form_submit_button("Create Account & Sign In ➔", use_container_width=True)
@@ -213,6 +170,8 @@ def render_login_page():
                 if reg_submit:
                     if not reg_identity or not reg_password:
                         st.error("⚠️ Please fill in all fields.")
+                    elif "@" not in reg_identity or "." not in reg_identity:
+                        st.error("⚠️ Please enter a valid Email ID address (e.g. user@gmail.com).")
                     elif reg_password != confirm_password:
                         st.error("❌ Passwords do not match!")
                     else:
