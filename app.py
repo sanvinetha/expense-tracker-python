@@ -100,6 +100,14 @@ if "eliminated_savings" not in st.session_state:
 if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
 
+# Registered User Passwords Database (Email ID -> Password)
+if "registered_users" not in st.session_state:
+    st.session_state["registered_users"] = {
+        "sanvinetha@gmail.com": "Sanvinetha@123",
+        "user@example.com": "Password123",
+        "admin@gmail.com": "AdminPass123"
+    }
+
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
 def set_page(page_name):
@@ -117,7 +125,7 @@ def render_top_left_back_arrow():
             st.rerun()
     st.markdown("---")
 
-# ==================== SIGN IN / LOGIN PAGE ==================== #
+# ==================== SIGN IN / LOGIN PAGE WITH STRICT PASSWORD VERIFICATION ==================== #
 def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
@@ -125,22 +133,62 @@ def render_login_page():
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.subheader("Welcome Back - Sign In")
-        st.write("Please enter your Email ID and Password to access your dashboard:")
+        auth_mode = st.radio("Choose Sign In Mode:", ["📧 Sign In to Account", "📝 Register New Account"], horizontal=True)
         
-        with st.form("email_login_form"):
-            identity = st.text_input("Email ID", placeholder="username@gmail.com").strip()
-            password = st.text_input("Password", type="password", placeholder="Enter your password")
-            submit_btn = st.form_submit_button("Sign In ➔", use_container_width=True)
+        # MODE 1: SIGN IN WITH STRICT PASSWORD CHECK
+        if auth_mode == "📧 Sign In to Account":
+            st.subheader("Welcome Back - Sign In")
+            st.write("Enter your Email ID and Password (Strict password verification enabled):")
             
-            if submit_btn:
-                if identity and password:
-                    st.session_state["logged_in"] = True
-                    st.session_state["user_email"] = identity
-                    st.session_state["show_logout_confirm"] = False
-                    st.rerun()
-                else:
-                    st.error("⚠️ Please enter your Email ID and Password.")
+            with st.form("email_login_form"):
+                identity = st.text_input("Email ID", placeholder="username@gmail.com").strip().lower()
+                password = st.text_input("Password", type="password", placeholder="Enter your password")
+                submit_btn = st.form_submit_button("Sign In ➔", use_container_width=True)
+                
+                if submit_btn:
+                    if not identity or not password:
+                        st.error("⚠️ Please enter both your Email ID and Password.")
+                    elif identity in st.session_state["registered_users"]:
+                        correct_password = st.session_state["registered_users"][identity]
+                        # STRICT PASSWORD MATCH CHECK
+                        if password == correct_password:
+                            st.session_state["logged_in"] = True
+                            st.session_state["user_email"] = identity
+                            st.session_state["show_logout_confirm"] = False
+                            st.success("✅ Password verified successfully! Access granted.")
+                            st.rerun()
+                        else:
+                            st.error("❌ Incorrect Password! Access denied. Please enter the correct password matching this Email ID.")
+                    else:
+                        st.error("❌ Account not found! Please check your Email ID or register a new account under 'Register New Account'.")
+
+            st.info("💡 **Registered Demo Credentials**:\n- **Email**: `sanvinetha@gmail.com` | **Password**: `Sanvinetha@123`\n- **Email**: `user@example.com` | **Password**: `Password123`\n- **Email**: `admin@gmail.com` | **Password**: `AdminPass123`")
+
+        # MODE 2: REGISTER NEW ACCOUNT & SET CUSTOM PASSWORD
+        else:
+            st.subheader("📝 Register New Account")
+            st.write("Create a new account by choosing your Email ID and Password:")
+            
+            with st.form("register_form"):
+                reg_identity = st.text_input("Email ID", placeholder="username@gmail.com").strip().lower()
+                reg_password = st.text_input("Choose Password", type="password", placeholder="Create a password")
+                confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password")
+                reg_submit = st.form_submit_button("Create Account & Set Password ➔", use_container_width=True)
+                
+                if reg_submit:
+                    if not reg_identity or not reg_password:
+                        st.error("⚠️ Please fill in all fields.")
+                    elif "@" not in reg_identity or "." not in reg_identity:
+                        st.error("⚠️ Please enter a valid Email ID address.")
+                    elif reg_password != confirm_password:
+                        st.error("❌ Passwords do not match!")
+                    else:
+                        st.session_state["registered_users"][reg_identity] = reg_password
+                        st.session_state["logged_in"] = True
+                        st.session_state["user_email"] = reg_identity
+                        st.session_state["show_logout_confirm"] = False
+                        st.success("🎉 Account created successfully & password saved! Signed in.")
+                        st.rerun()
 
         st.markdown("<div style='text-align: center; margin: 1.5rem 0; color: #94a3b8;'>─── OR SIGN IN WITH GOOGLE ───</div>", unsafe_allow_html=True)
         
@@ -158,7 +206,7 @@ def render_app():
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**!", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! (Verified User)", unsafe_allow_html=True)
     with head_col2:
         curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
         st.session_state["currency_symbol"] = curr_choice.split()[0]
