@@ -56,12 +56,25 @@ st.markdown("""
         font-size: 0.825rem;
         color: #94a3b8;
     }
+    .savings-card {
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .savings-title {
+        font-weight: 700;
+        color: #10b981;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 6px;
     }
     .stTabs [data-baseweb="tab"] {
         border-radius: 8px;
-        padding: 8px 16px;
+        padding: 8px 14px;
         font-weight: 600;
         background-color: rgba(30, 41, 59, 0.5);
     }
@@ -72,18 +85,23 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize Session State Data (Empty list by default - No mock data)
+# Initialize Session State Data
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
 if "expenses" not in st.session_state:
-    st.session_state["expenses"] = []  # Start completely empty!
+    st.session_state["expenses"] = []
+if "eliminated_savings" not in st.session_state:
+    st.session_state["eliminated_savings"] = 0.0
+
+# Non-essential categories that can be optimized
+NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='sub-header' style='text-align: center;'>Manage your personal expenses seamlessly in Rupees (₹)</p>", unsafe_allow_html=True)
+    st.markdown("<p class='sub-header' style='text-align: center;'>Manage your personal expenses & save money in Rupees (₹)</p>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -106,7 +124,6 @@ def render_login_page():
         
         st.markdown("<div style='text-align: center; margin: 1rem 0; color: #94a3b8;'>─── OR SIGN IN WITH ───</div>", unsafe_allow_html=True)
         
-        # Google Email ID Option
         if st.button("🌐 Continue with Google Email ID", use_container_width=True):
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "google_user@gmail.com"
@@ -120,11 +137,10 @@ def render_login_page():
 
 # ==================== MAIN HOME SCREEN ==================== #
 def render_home_dashboard():
-    # Top User Header Bar
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track your expenses in Rupees (₹).", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! Track expenses & save money in Rupees (₹).", unsafe_allow_html=True)
     with head_col2:
         st.write("")
         if st.button("🚪 Sign Out", use_container_width=True):
@@ -133,9 +149,10 @@ def render_home_dashboard():
 
     st.markdown("---")
 
-    # ALL 11 KEY FEATURE OPTIONS ON TOP HOME TABS
+    # ALL FEATURE OPTIONS ON TOP HOME TABS INCLUDING NEW "💡 SAVE MONEY" FEATURE
     tabs = st.tabs([
         "💰 Total Expenses",
+        "💡 Save Money",
         "➕ Add Expenses",
         "📋 View Expenses",
         "🔍 Search Expenses",
@@ -171,9 +188,15 @@ def render_home_dashboard():
         st.markdown("---")
         st.subheader("📌 Key Features Direct Access Grid")
 
-        # 11 Key Feature Shortcut Display Cards on Home Screen
         f_col1, f_col2, f_col3 = st.columns(3)
         with f_col1:
+            st.markdown("""
+            <div class='feature-card'>
+                <div class='feature-icon'>💡</div>
+                <div class='feature-title'>Save Money & Cut Expenses</div>
+                <div class='feature-desc'>Identify unnecessary spending & see where money can be saved.</div>
+            </div>
+            """, unsafe_allow_html=True)
             st.markdown("""
             <div class='feature-card'>
                 <div class='feature-icon'>➕</div>
@@ -186,13 +209,6 @@ def render_home_dashboard():
                 <div class='feature-icon'>📊</div>
                 <div class='feature-title'>Category Report</div>
                 <div class='feature-desc'>Percentage distribution of spending in ₹ per category.</div>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown("""
-            <div class='feature-card'>
-                <div class='feature-icon'>📑</div>
-                <div class='feature-title'>Financial Report</div>
-                <div class='feature-desc'>Comprehensive statement breakdown in Rupees.</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -251,8 +267,86 @@ def render_home_dashboard():
         else:
             st.write("No recent transactions. Added expenses will appear here.")
 
-    # TAB 2: ADD EXPENSES
+    # NEW TAB 2: SAVE MONEY & CUT UNNECESSARY EXPENSES
     with tabs[1]:
+        st.subheader("💡 Save Money & Cut Unnecessary Expenses")
+        st.write("Analyze your spending habits, detect unnecessary expenses, and discover exactly where money can be saved.")
+        
+        if not df.empty:
+            non_essential_df = df[df["category"].isin(NON_ESSENTIAL_CATEGORIES)]
+            total_non_essential = non_essential_df["amount"].sum()
+            total_spending = df["amount"].sum()
+            potential_savings_30 = total_non_essential * 0.30
+            
+            s_col1, s_col2, s_col3 = st.columns(3)
+            s_col1.metric("Non-Essential Spending", f"₹{total_non_essential:,.2f}")
+            s_col2.metric("Potential Monthly Savings (30% Cut)", f"₹{potential_savings_30:,.2f}")
+            s_col3.metric("Total Saved from Eliminated Expenses", f"₹{st.session_state['eliminated_savings']:,.2f}")
+            
+            st.markdown("---")
+            st.subheader("🎯 Where Money Can Be Saved (Smart Recommendations)")
+            
+            rec_col1, rec_col2 = st.columns(2)
+            with rec_col1:
+                dining_spend = df[df["category"] == "Food & Dining"]["amount"].sum()
+                if dining_spend > 0:
+                    st.markdown(f"""
+                    <div class='savings-card'>
+                        <div class='savings-title'>🍽️ Food & Dining Out Savings</div>
+                        <div>You spent <b>₹{dining_spend:,.2f}</b> on dining out. Cooking at home 2 extra days per week can save you approx <b>₹{dining_spend * 0.4:,.2f}</b> monthly!</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                shopping_spend = df[df["category"] == "Shopping"]["amount"].sum()
+                if shopping_spend > 0:
+                    st.markdown(f"""
+                    <div class='savings-card'>
+                        <div class='savings-title'>🛍️ Shopping & Impulse Buy Savings</div>
+                        <div>You spent <b>₹{shopping_spend:,.2f}</b> on shopping. Applying a 48-hour wait rule before buying non-essentials can save <b>₹{shopping_spend * 0.35:,.2f}</b>!</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            with rec_col2:
+                ent_spend = df[df["category"] == "Entertainment"]["amount"].sum()
+                if ent_spend > 0:
+                    st.markdown(f"""
+                    <div class='savings-card'>
+                        <div class='savings-title'>🎬 Entertainment & Subscriptions</div>
+                        <div>You spent <b>₹{ent_spend:,.2f}</b> on entertainment. Auditing unused streaming services can save you up to <b>₹{ent_spend * 0.5:,.2f}</b>.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                other_spend = df[df["category"] == "Other"]["amount"].sum()
+                if other_spend > 0:
+                    st.markdown(f"""
+                    <div class='savings-card'>
+                        <div class='savings-title'>📦 Miscellaneous Expenses</div>
+                        <div>You spent <b>₹{other_spend:,.2f}</b> on unclassified items. Tracking small daily cash purchases saves up to <b>₹{other_spend * 0.25:,.2f}</b>.</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            st.markdown("---")
+            st.subheader("✂️ Remove Unnecessary Expenses to Save Money")
+            st.write("Select an optional / non-essential expense to eliminate it and save money:")
+            
+            if not non_essential_df.empty:
+                save_options = {f"#{row['id']} - {row['title']} (₹{row['amount']:,.2f}) [{row['category']}]": row for _, row in non_essential_df.iterrows()}
+                selected_save_label = st.selectbox("Select Unnecessary Expense to Remove & Save:", list(save_options.keys()))
+                selected_save_item = save_options[selected_save_label]
+                
+                if st.button("💡 Eliminate Expense & Add to Money Saved!", type="primary"):
+                    saved_amount = selected_save_item["amount"]
+                    st.session_state["eliminated_savings"] += saved_amount
+                    st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_save_item["id"]]
+                    st.success(f"🎉 Expense '{selected_save_item['title']}' eliminated! You saved ₹{saved_amount:,.2f}!")
+                    st.rerun()
+            else:
+                st.info("Great job! No non-essential expenses currently logged.")
+        else:
+            st.info("💡 Add your expenses first to receive personalized money-saving recommendations!")
+
+    # TAB 3: ADD EXPENSES
+    with tabs[2]:
         st.subheader("➕ Add New Expense Entry (in ₹)")
         with st.form("add_expense_form_home"):
             col_a, col_b = st.columns(2)
@@ -284,8 +378,8 @@ def render_home_dashboard():
                 else:
                     st.error("Please enter an expense title.")
 
-    # TAB 3: VIEW EXPENSES
-    with tabs[2]:
+    # TAB 4: VIEW EXPENSES
+    with tabs[3]:
         st.subheader("📋 View All Recorded Expenses (₹)")
         if not df.empty:
             view_df = df.copy()
@@ -294,8 +388,8 @@ def render_home_dashboard():
         else:
             st.info("No expenses logged yet. Add your first expense using the '➕ Add Expenses' tab.")
 
-    # TAB 4: SEARCH EXPENSES
-    with tabs[3]:
+    # TAB 5: SEARCH EXPENSES
+    with tabs[4]:
         st.subheader("🔍 Search & Filter Expenses")
         if not df.empty:
             col_s1, col_s2, col_s3 = st.columns(3)
@@ -317,8 +411,8 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to search. Add an expense first.")
 
-    # TAB 5: CATEGORY REPORT
-    with tabs[4]:
+    # TAB 6: CATEGORY REPORT
+    with tabs[5]:
         st.subheader("📊 Category Report & Distribution (₹)")
         if not df.empty:
             cat_df = df.groupby("category")["amount"].agg(["sum", "count"]).reset_index()
@@ -333,8 +427,8 @@ def render_home_dashboard():
         else:
             st.info("No category data available yet. Add an expense first.")
 
-    # TAB 6: EDIT EXPENSE
-    with tabs[5]:
+    # TAB 7: EDIT EXPENSE
+    with tabs[6]:
         st.subheader("✏️ Edit Existing Expense (₹)")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} (₹{row['amount']:,.2f})": row['id'] for _, row in df.iterrows()}
@@ -364,8 +458,8 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to edit.")
 
-    # TAB 7: DELETE EXPENSE
-    with tabs[6]:
+    # TAB 8: DELETE EXPENSE
+    with tabs[7]:
         st.subheader("🗑️ Delete Expense Entry")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} (₹{row['amount']:,.2f})": row['id'] for _, row in df.iterrows()}
@@ -379,8 +473,8 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to delete.")
 
-    # TAB 8: CHART ANALYTICS
-    with tabs[7]:
+    # TAB 9: CHART ANALYTICS
+    with tabs[8]:
         st.subheader("📈 Interactive Chart Analytics (₹)")
         if not df.empty:
             c_ch1, c_ch2 = st.columns(2)
@@ -395,8 +489,8 @@ def render_home_dashboard():
         else:
             st.info("No charts to display yet. Add an expense first.")
 
-    # TAB 9: FINANCIAL REPORT
-    with tabs[8]:
+    # TAB 10: FINANCIAL REPORT
+    with tabs[9]:
         st.subheader("📑 Financial Statement Report (₹)")
         if not df.empty:
             st.markdown(f"**Report Account:** `{st.session_state['user_email']}` | **Date:** `{datetime.now().strftime('%B %d, %Y')}`")
@@ -411,8 +505,8 @@ def render_home_dashboard():
         else:
             st.info("No financial report available. Add an expense first.")
 
-    # TAB 10: MONTHLY EXPENSES
-    with tabs[9]:
+    # TAB 11: MONTHLY EXPENSES
+    with tabs[10]:
         st.subheader("📅 Monthly Expenses Breakdown (₹)")
         if not df.empty:
             df["Month-Year"] = df["date"].str.slice(0, 7)
@@ -428,8 +522,8 @@ def render_home_dashboard():
         else:
             st.info("No monthly expense records available yet.")
 
-    # TAB 11: EXPORT SUMMARY
-    with tabs[10]:
+    # TAB 12: EXPORT SUMMARY
+    with tabs[11]:
         st.subheader("📥 Export Summary Data (in ₹)")
         if not df.empty:
             csv_data = df.to_csv(index=False).encode('utf-8')
