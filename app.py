@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for Hiding Streamlit Toolbar (Fork, GitHub, Menu) & Layout Styling
+# Custom CSS for Hiding Streamlit Toolbar (Fork, GitHub, Menu) & Slide Card Styling
 st.markdown("""
     <style>
     #MainMenu {visibility: hidden !important;}
@@ -50,19 +50,20 @@ st.markdown("""
         margin-bottom: 0.25rem;
     }
     div.stButton > button {
-        border-radius: 10px !important;
-        padding: 0.6rem 1rem !important;
+        border-radius: 12px !important;
+        padding: 0.75rem 1.25rem !important;
         font-weight: 700 !important;
-        font-size: 0.95rem !important;
+        font-size: 1rem !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        background: rgba(30, 41, 59, 0.7) !important;
+        background: rgba(30, 41, 59, 0.8) !important;
         color: #f8fafc !important;
-        transition: all 0.2s ease !important;
+        transition: all 0.25s ease !important;
     }
     div.stButton > button:hover {
         border-color: #3b82f6 !important;
         background: linear-gradient(135deg, #1e293b, #334155) !important;
-        transform: translateY(-1px) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25) !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -73,7 +74,7 @@ if "logged_in" not in st.session_state:
 if "user_email" not in st.session_state:
     st.session_state["user_email"] = ""
 if "active_page" not in st.session_state:
-    st.session_state["active_page"] = "💰 Total Expenses"
+    st.session_state["active_page"] = "HOME"
 if "currency_symbol" not in st.session_state:
     st.session_state["currency_symbol"] = "₹"
 if "expenses" not in st.session_state:
@@ -107,6 +108,14 @@ def fmt_amt(amt):
     curr = st.session_state.get("currency_symbol", "₹")
     return f"{curr}{amt:,.2f}"
 
+def render_top_left_back_arrow():
+    b_col1, b_col2 = st.columns([1, 4])
+    with b_col1:
+        if st.button("⬅️ Back to Home Page", key="btn_top_left_back_arrow", use_container_width=True):
+            set_page("HOME")
+            st.rerun()
+    st.markdown("---")
+
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
@@ -128,7 +137,6 @@ def render_login_page():
                     st.session_state["logged_in"] = True
                     st.session_state["user_email"] = identity
                     st.session_state["show_logout_confirm"] = False
-                    st.success("Successfully signed in!")
                     st.rerun()
                 else:
                     st.error("⚠️ Please enter your Email ID and Password.")
@@ -139,12 +147,13 @@ def render_login_page():
             st.session_state["logged_in"] = True
             st.session_state["user_email"] = "google_user@gmail.com"
             st.session_state["show_logout_confirm"] = False
-            st.success("Signed in with Google Email ID!")
             st.rerun()
 
-# ==================== MAIN DASHBOARD ==================== #
-def render_home_dashboard():
+# ==================== MAIN APPLICATION ==================== #
+def render_app():
     curr = st.session_state.get("currency_symbol", "₹")
+    
+    # TOP HEADER BAR
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
@@ -172,60 +181,13 @@ def render_home_dashboard():
 
     st.markdown("---")
 
-    page_options = [
-        "💰 Total Expenses",
-        "💡 Save Money",
-        "🎯 Budget & Goals",
-        "💵 Income & Savings",
-        "🔔 Bill Reminders",
-        "➕ Add Expenses",
-        "📋 View Expenses",
-        "🔍 Search Expenses",
-        "📊 Category Report",
-        "✏️ Edit Expense",
-        "🗑️ Delete Expense",
-        "📈 Chart Analytics",
-        "📑 Financial Report",
-        "📅 Monthly Expenses",
-        "📥 Export Summary"
-    ]
-
-    nav_cols_1 = st.columns(5)
-    for idx, page in enumerate(page_options[:5]):
-        with nav_cols_1[idx]:
-            is_active = (st.session_state["active_page"] == page)
-            btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx}", use_container_width=True):
-                set_page(page)
-                st.rerun()
-
-    nav_cols_2 = st.columns(5)
-    for idx, page in enumerate(page_options[5:10]):
-        with nav_cols_2[idx]:
-            is_active = (st.session_state["active_page"] == page)
-            btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx+5}", use_container_width=True):
-                set_page(page)
-                st.rerun()
-
-    nav_cols_3 = st.columns(5)
-    for idx, page in enumerate(page_options[10:]):
-        with nav_cols_3[idx]:
-            is_active = (st.session_state["active_page"] == page)
-            btn_label = f"▸ {page}" if is_active else page
-            if st.button(btn_label, key=f"nav_top_{idx+10}", use_container_width=True):
-                set_page(page)
-                st.rerun()
-
-    st.markdown("---")
-
     df = pd.DataFrame(st.session_state["expenses"])
     inc_df = pd.DataFrame(st.session_state["incomes"])
     current_page = st.session_state["active_page"]
 
-    # ================= PAGE 1: TOTAL EXPENSES =================
-    if current_page == "💰 Total Expenses":
-        st.subheader(f"💰 Financial Summary ({curr})")
+    # ================= HOME PAGE SLIDE (INTERACTIVE FEATURE GRID) =================
+    if current_page == "HOME":
+        st.subheader(f"💰 Financial Summary Overview ({curr})")
         
         total_exp = df["amount"].sum() if not df.empty else 0.0
         total_inc = inc_df["amount"].sum() if not inc_df.empty else 0.0
@@ -245,16 +207,76 @@ def render_home_dashboard():
         c4.metric("Financial Health Score", f"{health_score} / 100")
         
         st.markdown("---")
-        st.subheader(f"📋 Recent Transaction History ({curr})")
+        st.subheader("📌 Features Direct Access Grid — Click Option to Open Slide")
+        st.write("Select any option below to open its dedicated slide view:")
+
+        features_grid = [
+            ("💰 Total Expenses", "View full overview & metrics"),
+            ("💡 Save Money", "Cut unnecessary expenses & save 30%"),
+            ("🎯 Budget & Goals", "Category spending limits & alerts"),
+            ("💵 Income & Savings", "Track income streams & net savings"),
+            ("🔔 Bill Reminders", "Upcoming subscription bill dates"),
+            ("➕ Add Expenses", "Log new spending transactions"),
+            ("📋 View Expenses", "Full transaction history table"),
+            ("🔍 Search Expenses", "Filter transactions by category"),
+            ("📊 Category Report", "Breakdown by spending category"),
+            ("✏️ Edit Expense", "Update existing expense entries"),
+            ("🗑️ Delete Expense", "Remove unwanted transactions"),
+            ("📈 Chart Analytics", "Plotly pie & trend bar charts"),
+            ("📑 Financial Report", "Itemized category statement"),
+            ("📅 Monthly Expenses", "Month-by-month spending history"),
+            ("📥 Export Summary", "Download CSV and JSON summary")
+        ]
+
+        # 3 COLUMNS GRID OF FEATURE CARDS
+        for row_idx in range(0, len(features_grid), 3):
+            cols = st.columns(3)
+            for col_idx in range(3):
+                item_idx = row_idx + col_idx
+                if item_idx < len(features_grid):
+                    title, desc = features_grid[item_idx]
+                    with cols[col_idx]:
+                        st.markdown(f"**{title}**")
+                        st.caption(desc)
+                        if st.button(f"Open {title} ➔", key=f"grid_btn_{item_idx}", use_container_width=True):
+                            set_page(title)
+                            st.rerun()
+                        st.markdown("<br>", unsafe_allow_html=True)
+
+    # ================= FEATURE SLIDE: TOTAL EXPENSES =================
+    elif current_page == "💰 Total Expenses":
+        render_top_left_back_arrow()
+        st.subheader(f"💰 Total Expenses Breakdown ({curr})")
+        
+        total_exp = df["amount"].sum() if not df.empty else 0.0
+        total_inc = inc_df["amount"].sum() if not inc_df.empty else 0.0
+        net_sav = total_inc - total_exp
+        
+        health_score = 100
+        if total_inc > 0:
+            savings_rate = (net_sav / total_inc) * 100
+            health_score = max(0, min(100, int(savings_rate * 2)))
+        elif total_exp > 0:
+            health_score = 40
+            
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Total Expenses", fmt_amt(total_exp))
+        c2.metric("Total Income", fmt_amt(total_inc))
+        c3.metric("Net Savings", fmt_amt(net_sav))
+        c4.metric("Financial Health Score", f"{health_score} / 100")
+        
+        st.markdown("---")
+        st.subheader(f"📋 Transaction History ({curr})")
         if not df.empty:
             display_df = df.copy()
             display_df["amount"] = display_df["amount"].apply(lambda x: fmt_amt(x))
-            st.dataframe(display_df.sort_values(by="date", ascending=False).head(5), use_container_width=True)
+            st.dataframe(display_df.sort_values(by="date", ascending=False), use_container_width=True)
         else:
-            st.info("💡 No expenses added yet. Click '➕ Add Expenses' above to log your first expense!")
+            st.info("💡 No expenses added yet.")
 
-    # ================= PAGE 2: SAVE MONEY =================
+    # ================= FEATURE SLIDE: SAVE MONEY =================
     elif current_page == "💡 Save Money":
+        render_top_left_back_arrow()
         st.subheader("💡 Save Money & Cut Unnecessary Expenses")
         st.write("Analyze spending habits, detect unnecessary expenses, and discover where money can be saved.")
         
@@ -320,8 +342,9 @@ def render_home_dashboard():
         else:
             st.info("💡 Add your expenses first to receive personalized money-saving recommendations!")
 
-    # ================= PAGE 3: BUDGET & GOALS =================
+    # ================= FEATURE SLIDE: BUDGET & GOALS =================
     elif current_page == "🎯 Budget & Goals":
+        render_top_left_back_arrow()
         st.subheader("🎯 Category Monthly Budget Limits & Alerts")
         st.write("Set category monthly spending caps and monitor live budget progress alerts.")
         
@@ -357,8 +380,9 @@ def render_home_dashboard():
                 st.success(f"✅ {c_label}")
                 st.progress(pct)
 
-    # ================= PAGE 4: INCOME & SAVINGS =================
+    # ================= FEATURE SLIDE: INCOME & SAVINGS =================
     elif current_page == "💵 Income & Savings":
+        render_top_left_back_arrow()
         st.subheader("💵 Income Sources & Net Savings Calculator")
         
         with st.form("add_income_form"):
@@ -387,8 +411,9 @@ def render_home_dashboard():
         else:
             st.info("No income records added yet.")
 
-    # ================= PAGE 5: BILL REMINDERS =================
+    # ================= FEATURE SLIDE: BILL REMINDERS =================
     elif current_page == "🔔 Bill Reminders":
+        render_top_left_back_arrow()
         st.subheader("🔔 Subscription & Bill Payment Reminders")
         st.write("Track upcoming recurring bill payments (Rent, Netflix, Electricity, Wifi).")
         
@@ -419,8 +444,9 @@ def render_home_dashboard():
         else:
             st.info("No upcoming bill reminders.")
 
-    # ================= PAGE 6: ADD EXPENSES =================
+    # ================= FEATURE SLIDE: ADD EXPENSES =================
     elif current_page == "➕ Add Expenses":
+        render_top_left_back_arrow()
         st.subheader(f"➕ Add New Expense Entry ({curr})")
         with st.form("add_expense_form_main"):
             col_a, col_b = st.columns(2)
@@ -452,18 +478,20 @@ def render_home_dashboard():
                 else:
                     st.error("Please enter an expense title.")
 
-    # ================= PAGE 7: VIEW EXPENSES =================
+    # ================= FEATURE SLIDE: VIEW EXPENSES =================
     elif current_page == "📋 View Expenses":
+        render_top_left_back_arrow()
         st.subheader(f"📋 View All Recorded Expenses ({curr})")
         if not df.empty:
             view_df = df.copy()
             view_df["amount"] = view_df["amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(view_df, use_container_width=True)
         else:
-            st.info("No expenses logged yet. Click '➕ Add Expenses' above to add your first expense.")
+            st.info("No expenses logged yet.")
 
-    # ================= PAGE 8: SEARCH EXPENSES =================
+    # ================= FEATURE SLIDE: SEARCH EXPENSES =================
     elif current_page == "🔍 Search Expenses":
+        render_top_left_back_arrow()
         st.subheader("🔍 Search & Filter Expenses")
         if not df.empty:
             col_s1, col_s2, col_s3 = st.columns(3)
@@ -483,10 +511,11 @@ def render_home_dashboard():
             filtered_df["amount"] = filtered_df["amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(filtered_df, use_container_width=True)
         else:
-            st.info("No expenses available to search. Add an expense first.")
+            st.info("No expenses available to search.")
 
-    # ================= PAGE 9: CATEGORY REPORT =================
+    # ================= FEATURE SLIDE: CATEGORY REPORT =================
     elif current_page == "📊 Category Report":
+        render_top_left_back_arrow()
         st.subheader(f"📊 Category Report & Distribution ({curr})")
         if not df.empty:
             cat_df = df.groupby("category")["amount"].agg(["sum", "count"]).reset_index()
@@ -499,10 +528,11 @@ def render_home_dashboard():
             fig = px.pie(cat_df, names="Category", values=f"Total Spent ({curr})", title="Category Share (%)", hole=0.4)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("No category data available yet. Add an expense first.")
+            st.info("No category data available yet.")
 
-    # ================= PAGE 10: EDIT EXPENSE =================
+    # ================= FEATURE SLIDE: EDIT EXPENSE =================
     elif current_page == "✏️ Edit Expense":
+        render_top_left_back_arrow()
         st.subheader(f"✏️ Edit Existing Expense ({curr})")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])})": row['id'] for _, row in df.iterrows()}
@@ -532,8 +562,9 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to edit.")
 
-    # ================= PAGE 11: DELETE EXPENSE =================
+    # ================= FEATURE SLIDE: DELETE EXPENSE =================
     elif current_page == "🗑️ Delete Expense":
+        render_top_left_back_arrow()
         st.subheader("🗑️ Delete Expense Entry")
         if not df.empty:
             expense_options = {f"#{row['id']} - {row['title']} ({fmt_amt(row['amount'])})": row['id'] for _, row in df.iterrows()}
@@ -547,8 +578,9 @@ def render_home_dashboard():
         else:
             st.info("No expenses available to delete.")
 
-    # ================= PAGE 12: CHART ANALYTICS =================
+    # ================= FEATURE SLIDE: CHART ANALYTICS =================
     elif current_page == "📈 Chart Analytics":
+        render_top_left_back_arrow()
         st.subheader(f"📈 Interactive Chart Analytics ({curr})")
         if not df.empty:
             c_ch1, c_ch2 = st.columns(2)
@@ -561,10 +593,11 @@ def render_home_dashboard():
                 fig_bar = px.bar(monthly_df, x="month", y="amount", title=f"Monthly Spending Trend ({curr})", labels={"amount": f"Amount ({curr})", "month": "Month"})
                 st.plotly_chart(fig_bar, use_container_width=True)
         else:
-            st.info("No charts to display yet. Add an expense first.")
+            st.info("No charts to display yet.")
 
-    # ================= PAGE 13: FINANCIAL REPORT =================
+    # ================= FEATURE SLIDE: FINANCIAL REPORT =================
     elif current_page == "📑 Financial Report":
+        render_top_left_back_arrow()
         st.subheader(f"📑 Financial Statement Report ({curr})")
         if not df.empty:
             st.markdown(f"**Report Account:** `{st.session_state['user_email']}` | **Date:** `{datetime.now().strftime('%B %d, %Y')}`")
@@ -577,10 +610,11 @@ def render_home_dashboard():
             summary_df["Average_Amount"] = summary_df["Average_Amount"].apply(lambda x: fmt_amt(x))
             st.dataframe(summary_df, use_container_width=True)
         else:
-            st.info("No financial report available. Add an expense first.")
+            st.info("No financial report available.")
 
-    # ================= PAGE 14: MONTHLY EXPENSES =================
+    # ================= FEATURE SLIDE: MONTHLY EXPENSES =================
     elif current_page == "📅 Monthly Expenses":
+        render_top_left_back_arrow()
         st.subheader(f"📅 Monthly Expenses Breakdown ({curr})")
         if not df.empty:
             df["Month-Year"] = df["date"].str.slice(0, 7)
@@ -596,8 +630,9 @@ def render_home_dashboard():
         else:
             st.info("No monthly expense records available yet.")
 
-    # ================= PAGE 15: EXPORT SUMMARY =================
+    # ================= FEATURE SLIDE: EXPORT SUMMARY =================
     elif current_page == "📥 Export Summary":
+        render_top_left_back_arrow()
         st.subheader(f"📥 Export Summary Data ({curr})")
         if not df.empty:
             csv_data = df.to_csv(index=False).encode('utf-8')
@@ -621,11 +656,11 @@ def render_home_dashboard():
                     use_container_width=True
                 )
         else:
-            st.info("No expense data available to export. Add an expense first.")
+            st.info("No expense data available to export.")
 
 # Main Application Entrypoint
 if __name__ == "__main__":
     if not st.session_state["logged_in"]:
         render_login_page()
     else:
-        render_home_dashboard()
+        render_app()
