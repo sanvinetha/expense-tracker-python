@@ -36,7 +36,7 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
     .author-badge {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 600;
         color: #38bdf8;
         background: rgba(56, 189, 248, 0.1);
@@ -44,25 +44,7 @@ st.markdown("""
         border-radius: 20px;
         border: 1px solid rgba(56, 189, 248, 0.3);
         display: inline-block;
-        margin-top: 0.4rem;
-    }
-    .github-link {
-        color: #f8fafc !important;
-        background: rgba(30, 41, 59, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 0.3rem 0.75rem;
-        border-radius: 8px;
-        text-decoration: none !important;
-        font-weight: 600;
-        font-size: 0.85rem;
-        display: inline-block;
-        margin-left: 0.4rem;
-        transition: all 0.2s ease;
-    }
-    .github-link:hover {
-        border-color: #3b82f6 !important;
-        color: #38bdf8 !important;
-        transform: translateY(-1px);
+        margin-bottom: 0.4rem;
     }
     .savings-card {
         background: rgba(16, 185, 129, 0.12);
@@ -160,13 +142,7 @@ def render_login_page():
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header' style='text-align: center;'>Manage your personal expenses, budgets & savings in {curr}</p>", unsafe_allow_html=True)
-    st.markdown("""
-        <div style='text-align: center;'>
-            <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span><br><br>
-            <a class='github-link' href='https://github.com/Dudipala-Hemanth' target='_blank'>💻 Hemanth Reddy (GitHub)</a>
-            <a class='github-link' href='https://github.com/sanvinetha' target='_blank'>💻 Sanvi Netha (GitHub)</a>
-        </div><br>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center;'><span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span></div><br>", unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
@@ -223,16 +199,15 @@ def render_login_page():
 def render_app():
     curr = st.session_state.get("currency_symbol", "₹")
     
-    # TOP HEADER BAR WITH AUTHOR CREDIT BADGES & GITHUB PROFILES AT TOP RIGHT
-    head_col1, head_col2 = st.columns([2.5, 1.5])
+    # TOP HEADER BAR WITH DEVELOPER CREDIT BADGE AT TOP RIGHT
+    head_col1, head_col2 = st.columns([2.2, 1.8])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
-        st.markdown(f"Welcome back, **{st.session_state['user_email']}**! &nbsp; <span class='author-badge'>✨ Developed by Hemanth Reddy, Sanvi Netha & Srivalli Kakkireni</span>", unsafe_allow_html=True)
+        st.markdown(f"Welcome back, **{st.session_state['user_email']}**!", unsafe_allow_html=True)
     with head_col2:
         st.markdown("""
-            <div style='text-align: right; margin-bottom: 0.5rem;'>
-                <a class='github-link' href='https://github.com/Dudipala-Hemanth' target='_blank'>💻 Hemanth Reddy (GitHub)</a>
-                <a class='github-link' href='https://github.com/sanvinetha' target='_blank'>💻 Sanvi Netha (GitHub)</a>
+            <div style='text-align: right;'>
+                <span class='author-badge'>✨ Developed and Maintained by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni</span>
             </div>
         """, unsafe_allow_html=True)
         curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
