@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 import json
+import os
+import re
 
 # Page Configuration for Streamlit Cloud - Clean Title Expense Tracker
 st.set_page_config(
@@ -97,6 +99,49 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# PERMANENT FILE DATA PERSISTENCE HELPERS
+DATA_DIR = "user_data_store"
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+def sanitize_email_filename(email):
+    clean = re.sub(r'[^a-zA-Z0-9_]', '_', email)
+    return os.path.join(DATA_DIR, f"data_{clean}.json")
+
+def load_user_data(email):
+    if not email:
+        return
+    filepath = sanitize_email_filename(email)
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                st.session_state["expenses"] = data.get("expenses", [])
+                st.session_state["incomes"] = data.get("incomes", [])
+                st.session_state["bills"] = data.get("bills", [])
+                st.session_state["category_budgets"] = data.get("category_budgets", st.session_state["category_budgets"])
+                st.session_state["eliminated_savings"] = data.get("eliminated_savings", 0.0)
+        except Exception as e:
+            pass
+
+def save_user_data():
+    email = st.session_state.get("user_email", "")
+    if not email:
+        return
+    filepath = sanitize_email_filename(email)
+    payload = {
+        "expenses": st.session_state.get("expenses", []),
+        "incomes": st.session_state.get("incomes", []),
+        "bills": st.session_state.get("bills", []),
+        "category_budgets": st.session_state.get("category_budgets", {}),
+        "eliminated_savings": st.session_state.get("eliminated_savings", 0.0)
+    }
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+    except Exception as e:
+        pass
+
 # URL PERSISTENCE TO PREVENT RETURNING TO SIGN-IN ON RELOAD / REFRESH
 query_params = st.query_params
 
@@ -138,6 +183,12 @@ if "user_passwords" not in st.session_state:
     st.session_state["user_passwords"] = {}
 if "saved_expense_toast" not in st.session_state:
     st.session_state["saved_expense_toast"] = ""
+
+# Auto load user data if logged in
+if st.session_state["logged_in"] and st.session_state["user_email"]:
+    if "data_loaded_for" not in st.session_state or st.session_state["data_loaded_for"] != st.session_state["user_email"]:
+        load_user_data(st.session_state["user_email"])
+        st.session_state["data_loaded_for"] = st.session_state["user_email"]
 
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
@@ -198,6 +249,8 @@ def render_login_page():
                         st.query_params["logged_in"] = "true"
                         st.query_params["user_email"] = identity
                         st.query_params["page"] = "HOME"
+                        load_user_data(identity)
+                        st.session_state["data_loaded_for"] = identity
                         st.success("✅ Signed in!")
                         st.rerun()
                     else:
@@ -209,6 +262,8 @@ def render_login_page():
                             st.query_params["logged_in"] = "true"
                             st.query_params["user_email"] = identity
                             st.query_params["page"] = "HOME"
+                            load_user_data(identity)
+                            st.session_state["data_loaded_for"] = identity
                             st.success("✅ Signed in!")
                             st.rerun()
                         else:
@@ -223,6 +278,8 @@ def render_login_page():
             st.query_params["logged_in"] = "true"
             st.query_params["user_email"] = "google_user@gmail.com"
             st.query_params["page"] = "HOME"
+            load_user_data("google_user@gmail.com")
+            st.session_state["data_loaded_for"] = "google_user@gmail.com"
             st.rerun()
 
     render_bottom_author_footer()
@@ -421,6 +478,7 @@ def render_app():
                     saved_amount = selected_save_item["amount"]
                     st.session_state["eliminated_savings"] += saved_amount
                     st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_save_item["id"]]
+                    save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Expense '{selected_save_item['title']}' eliminated! You saved {fmt_amt(saved_amount)}!"
                     st.rerun()
             else:
@@ -446,6 +504,7 @@ def render_app():
                 new_limit = st.number_input(f"{cat} Limit ({curr})", min_value=100.0, value=float(limit), step=500.0, key=f"bud_in_{cat}")
                 budgets[cat] = new_limit
             idx += 1
+        save_user_data()
 
         st.markdown("---")
         st.markdown("#### Live Category Budget Status & Over-Budget Alerts")
@@ -487,6 +546,7 @@ def render_app():
                         "amount": float(inc_amount),
                         "date": str(inc_date)
                     })
+                    save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Income source '{inc_title}' ({fmt_amt(inc_amount)}) saved successfully!"
                     st.rerun()
 
@@ -521,6 +581,7 @@ def render_app():
                         "due_date": str(b_due),
                         "status": "Pending"
                     })
+                    save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Bill reminder '{b_title}' saved successfully!"
                     st.rerun()
 
@@ -563,6 +624,7 @@ def render_app():
                         "notes": notes
                     }
                     st.session_state["expenses"].insert(0, new_item)
+                    save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Expense '{title}' ({fmt_amt(amount)}) saved successfully!"
                     st.rerun()
                 else:
@@ -651,6 +713,7 @@ def render_app():
                         selected_item["date"] = str(edit_date)
                         selected_item["payment_method"] = edit_payment
                         selected_item["notes"] = edit_notes
+                        save_user_data()
                         st.session_state["saved_expense_toast"] = f"🎉 Expense '{edit_title}' updated successfully!"
                         st.rerun()
         else:
@@ -668,6 +731,7 @@ def render_app():
             
             if st.button("❌ Confirm Delete", key="btn_confirm_delete", type="primary"):
                 st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_id]
+                save_user_data()
                 st.session_state["saved_expense_toast"] = "🎉 Expense deleted successfully!"
                 st.rerun()
         else:
