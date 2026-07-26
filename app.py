@@ -330,14 +330,15 @@ def render_app():
 
     # ================= HOME PAGE SLIDE =================
     if current_page == "HOME":
+        # 1ST ROW MUST CONSIST OF: Add Expenses -> View Expenses -> Total Expenses
         features_list = [
+            "➕ Add Expenses",
+            "📋 View Expenses",
             "💰 Total Expenses",
             "💡 Save Money",
-            "➕ Add Expenses",
             "🎯 Budget & Goals",
             "💵 Income & Savings",
             "🔔 Bill Reminders",
-            "📋 View Expenses",
             "🔍 Search Expenses",
             "📊 Category Report",
             "✏️ Edit Expense",
@@ -535,11 +536,11 @@ def render_app():
         with st.form("add_income_form"):
             col_i1, col_i2 = st.columns(2)
             inc_title = col_i1.text_input("Income Source", placeholder="e.g. Monthly Salary, Freelance Work")
-            inc_amount = col_i2.number_input(f"Amount ({curr})", min_value=1.0, step=1000.0)
+            inc_amount = col_i2.number_input(f"Amount ({curr})", min_value=0.0, value=None, placeholder="Enter income amount...", step=1000.0)
             inc_date = st.date_input("Date Received", datetime.today())
             
             if st.form_submit_button("Save Income Entry"):
-                if inc_title:
+                if inc_title and inc_amount is not None:
                     st.session_state["incomes"].append({
                         "id": int(datetime.now().timestamp()),
                         "title": inc_title,
@@ -549,6 +550,8 @@ def render_app():
                     save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Income source '{inc_title}' ({fmt_amt(inc_amount)}) saved successfully!"
                     st.rerun()
+                elif inc_amount is None:
+                    st.error("Please enter the income amount.")
 
         st.markdown("---")
         st.subheader("📋 Recorded Income Sources")
@@ -569,11 +572,11 @@ def render_app():
         with st.form("add_bill_form"):
             col_b1, col_b2, col_b3 = st.columns(3)
             b_title = col_b1.text_input("Bill Name", placeholder="e.g. House Rent, WiFi Bill")
-            b_amount = col_b2.number_input(f"Bill Amount ({curr})", min_value=1.0, step=100.0)
+            b_amount = col_b2.number_input(f"Bill Amount ({curr})", min_value=0.0, value=None, placeholder="Enter bill amount...", step=100.0)
             b_due = col_b3.date_input("Due Date", datetime.today() + timedelta(days=7))
             
             if st.form_submit_button("Add Bill Reminder"):
-                if b_title:
+                if b_title and b_amount is not None:
                     st.session_state["bills"].append({
                         "id": int(datetime.now().timestamp()),
                         "title": b_title,
@@ -584,6 +587,8 @@ def render_app():
                     save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Bill reminder '{b_title}' saved successfully!"
                     st.rerun()
+                elif b_amount is None:
+                    st.error("Please enter the bill amount.")
 
         st.markdown("---")
         st.subheader("📅 Upcoming Bills Schedule")
@@ -602,7 +607,8 @@ def render_app():
         with st.form("add_expense_form_main"):
             col_a, col_b = st.columns(2)
             title = col_a.text_input("Expense Title", placeholder="Groceries, Coffee, Rent...")
-            amount = col_b.number_input(f"Amount ({curr})", min_value=1.0, step=10.0)
+            # AMOUNT BOX CONSISTS OF NOTHING (BLANK VALUE=NONE)
+            amount = col_b.number_input(f"Amount ({curr})", min_value=0.0, value=None, placeholder="Enter amount...", step=10.0)
             
             col_c, col_d, col_e = st.columns(3)
             category = col_c.selectbox("Category", ["Groceries", "Food & Dining", "Transportation", "Utilities & Bills", "Shopping", "Entertainment", "Health & Medical", "Other"])
@@ -613,7 +619,11 @@ def render_app():
             
             submitted = st.form_submit_button("Save Expense Entry", use_container_width=True)
             if submitted:
-                if title:
+                if not title:
+                    st.error("Please enter an expense title.")
+                elif amount is None:
+                    st.error("Please enter the expense amount.")
+                else:
                     new_item = {
                         "id": int(datetime.now().timestamp()),
                         "title": title,
@@ -627,8 +637,6 @@ def render_app():
                     save_user_data()
                     st.session_state["saved_expense_toast"] = f"🎉 Expense '{title}' ({fmt_amt(amount)}) saved successfully!"
                     st.rerun()
-                else:
-                    st.error("Please enter an expense title.")
         render_bottom_author_footer()
 
     # ================= FEATURE SLIDE: VIEW EXPENSES =================
