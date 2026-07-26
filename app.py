@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 import json
+import streamlit.components.v1 as components
 
 # Page Configuration for Streamlit Cloud - Clean Title Expense Tracker
 st.set_page_config(
@@ -136,6 +137,8 @@ if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
 if "user_passwords" not in st.session_state:
     st.session_state["user_passwords"] = {}
+if "success_message" not in st.session_state:
+    st.session_state["success_message"] = ""
 
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
@@ -168,6 +171,20 @@ def render_bottom_author_footer():
 
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
+    # JavaScript snippet to restore login state automatically if tab was closed and re-opened
+    components.html("""
+        <script>
+            try {
+                const savedLoggedIn = localStorage.getItem("et_logged_in");
+                const savedUser = localStorage.getItem("et_user_email");
+                const urlParams = new URLSearchParams(window.parent.location.search);
+                if (savedLoggedIn === "true" && savedUser && !urlParams.get("logged_in")) {
+                    window.parent.location.href = window.parent.location.pathname + "?logged_in=true&user_email=" + encodeURIComponent(savedUser) + "&page=HOME";
+                }
+            } catch(e) { console.log(e); }
+        </script>
+    """, height=0)
+
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header' style='text-align: center;'>Manage your personal expenses, budgets & savings in {curr}</p>", unsafe_allow_html=True)
@@ -196,6 +213,12 @@ def render_login_page():
                         st.query_params["logged_in"] = "true"
                         st.query_params["user_email"] = identity
                         st.query_params["page"] = "HOME"
+                        components.html(f"""
+                            <script>
+                                localStorage.setItem("et_logged_in", "true");
+                                localStorage.setItem("et_user_email", "{identity}");
+                            </script>
+                        """, height=0)
                         st.success("✅ Signed in!")
                         st.rerun()
                     else:
@@ -207,6 +230,12 @@ def render_login_page():
                             st.query_params["logged_in"] = "true"
                             st.query_params["user_email"] = identity
                             st.query_params["page"] = "HOME"
+                            components.html(f"""
+                                <script>
+                                    localStorage.setItem("et_logged_in", "true");
+                                    localStorage.setItem("et_user_email", "{identity}");
+                                </script>
+                            """, height=0)
                             st.success("✅ Signed in!")
                             st.rerun()
                         else:
@@ -221,12 +250,29 @@ def render_login_page():
             st.query_params["logged_in"] = "true"
             st.query_params["user_email"] = "google_user@gmail.com"
             st.query_params["page"] = "HOME"
+            components.html("""
+                <script>
+                    localStorage.setItem("et_logged_in", "true");
+                    localStorage.setItem("et_user_email", "google_user@gmail.com");
+                </script>
+            """, height=0)
             st.rerun()
 
     render_bottom_author_footer()
 
 # ==================== MAIN APPLICATION ==================== #
 def render_app():
+    # JavaScript snippet to sync LocalStorage when in main app
+    user_email_js = st.session_state['user_email']
+    components.html(f"""
+        <script>
+            try {{
+                localStorage.setItem("et_logged_in", "true");
+                localStorage.setItem("et_user_email", "{user_email_js}");
+            }} catch(e) {{}}
+        </script>
+    """, height=0)
+
     curr = st.session_state.get("currency_symbol", "₹")
     
     # TOP HEADER BAR
@@ -250,11 +296,25 @@ def render_app():
                 st.session_state["logged_in"] = False
                 st.session_state["show_logout_confirm"] = False
                 st.query_params.clear()
+                components.html("""
+                    <script>
+                        try {
+                            localStorage.removeItem("et_logged_in");
+                            localStorage.removeItem("et_user_email");
+                            window.parent.location.href = window.parent.location.pathname;
+                        } catch(e) {}
+                    </script>
+                """, height=0)
                 st.rerun()
         with btn_c2:
             if st.button("❌ Cancel", key="confirm_logout_no", use_container_width=True):
                 st.session_state["show_logout_confirm"] = False
                 st.rerun()
+
+    # RENDER PERSISTENT SUCCESS NOTIFICATION BANNER IF AN EXPENSE WAS SAVED
+    if st.session_state["success_message"]:
+        st.success(st.session_state["success_message"])
+        st.session_state["success_message"] = ""
 
     st.markdown("---")
 
@@ -412,7 +472,7 @@ def render_app():
                     saved_amount = selected_save_item["amount"]
                     st.session_state["eliminated_savings"] += saved_amount
                     st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_save_item["id"]]
-                    st.success(f"🎉 Expense '{selected_save_item['title']}' eliminated! You saved {fmt_amt(saved_amount)}!")
+                    st.session_state["success_message"] = f"🎉 Expense '{selected_save_item['title']}' eliminated successfully! You saved {fmt_amt(saved_amount)}!"
                     st.rerun()
             else:
                 st.info("Great job! No non-essential expenses currently logged.")
@@ -478,7 +538,7 @@ def render_app():
                         "amount": float(inc_amount),
                         "date": str(inc_date)
                     })
-                    st.success(f"Saved income: {inc_title} ({fmt_amt(inc_amount)})")
+                    st.session_state["success_message"] = f"✅ Income entry '{inc_title}' ({fmt_amt(inc_amount)}) saved successfully!"
                     st.rerun()
 
         st.markdown("---")
@@ -512,7 +572,7 @@ def render_app():
                         "due_date": str(b_due),
                         "status": "Pending"
                     })
-                    st.success(f"Bill reminder added for {b_title}")
+                    st.session_state["success_message"] = f"✅ Bill reminder '{b_title}' saved successfully!"
                     st.rerun()
 
         st.markdown("---")
@@ -554,7 +614,7 @@ def render_app():
                         "notes": notes
                     }
                     st.session_state["expenses"].insert(0, new_item)
-                    st.success(f"Added: {title} ({fmt_amt(amount)})")
+                    st.session_state["success_message"] = f"✅ Expense '{title}' ({fmt_amt(amount)}) saved successfully!"
                     st.rerun()
                 else:
                     st.error("Please enter an expense title.")
@@ -588,7 +648,7 @@ def render_app():
             if category_filter != "ALL":
                 filtered_df = filtered_df[filtered_df["category"] == category_filter]
             if payment_filter != "ALL":
-                filtered_df = filtered_df[filtered_filter["payment_method"] == payment_filter]
+                filtered_df = filtered_df[filtered_df["payment_method"] == payment_filter]
                 
             st.write(f"Showing {len(filtered_df)} matching results:")
             filtered_df["amount"] = filtered_df["amount"].apply(lambda x: fmt_amt(x))
@@ -642,7 +702,7 @@ def render_app():
                         selected_item["date"] = str(edit_date)
                         selected_item["payment_method"] = edit_payment
                         selected_item["notes"] = edit_notes
-                        st.success("Expense updated successfully!")
+                        st.session_state["success_message"] = f"✅ Expense '{edit_title}' updated successfully!"
                         st.rerun()
         else:
             st.info("No expenses available to edit.")
@@ -659,7 +719,7 @@ def render_app():
             
             if st.button("❌ Confirm Delete", key="btn_confirm_delete", type="primary"):
                 st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_id]
-                st.success("Expense deleted successfully!")
+                st.session_state["success_message"] = "✅ Expense deleted successfully!"
                 st.rerun()
         else:
             st.info("No expenses available to delete.")
