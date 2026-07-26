@@ -136,8 +136,8 @@ if "show_logout_confirm" not in st.session_state:
     st.session_state["show_logout_confirm"] = False
 if "user_passwords" not in st.session_state:
     st.session_state["user_passwords"] = {}
-if "success_message" not in st.session_state:
-    st.session_state["success_message"] = ""
+if "saved_expense_toast" not in st.session_state:
+    st.session_state["saved_expense_toast"] = ""
 
 NON_ESSENTIAL_CATEGORIES = ["Food & Dining", "Shopping", "Entertainment", "Other"]
 
@@ -258,10 +258,12 @@ def render_app():
                 st.session_state["show_logout_confirm"] = False
                 st.rerun()
 
-    # RENDER PERSISTENT SUCCESS NOTIFICATION BANNER IF AN EXPENSE WAS SAVED
-    if st.session_state["success_message"]:
-        st.success(st.session_state["success_message"])
-        st.session_state["success_message"] = ""
+    # RENDER POP-UP TOAST NOTIFICATION & SUCCESS BANNER IF AN EXPENSE WAS SAVED
+    if st.session_state["saved_expense_toast"]:
+        msg = st.session_state["saved_expense_toast"]
+        st.toast(msg, icon="🎉")
+        st.success(msg)
+        st.session_state["saved_expense_toast"] = ""
 
     st.markdown("---")
 
@@ -419,7 +421,7 @@ def render_app():
                     saved_amount = selected_save_item["amount"]
                     st.session_state["eliminated_savings"] += saved_amount
                     st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_save_item["id"]]
-                    st.session_state["success_message"] = f"🎉 Expense '{selected_save_item['title']}' eliminated successfully! You saved {fmt_amt(saved_amount)}!"
+                    st.session_state["saved_expense_toast"] = f"🎉 Expense '{selected_save_item['title']}' eliminated! You saved {fmt_amt(saved_amount)}!"
                     st.rerun()
             else:
                 st.info("Great job! No non-essential expenses currently logged.")
@@ -485,7 +487,7 @@ def render_app():
                         "amount": float(inc_amount),
                         "date": str(inc_date)
                     })
-                    st.session_state["success_message"] = f"✅ Income entry '{inc_title}' ({fmt_amt(inc_amount)}) saved successfully!"
+                    st.session_state["saved_expense_toast"] = f"🎉 Income source '{inc_title}' ({fmt_amt(inc_amount)}) saved successfully!"
                     st.rerun()
 
         st.markdown("---")
@@ -519,7 +521,7 @@ def render_app():
                         "due_date": str(b_due),
                         "status": "Pending"
                     })
-                    st.session_state["success_message"] = f"✅ Bill reminder '{b_title}' saved successfully!"
+                    st.session_state["saved_expense_toast"] = f"🎉 Bill reminder '{b_title}' saved successfully!"
                     st.rerun()
 
         st.markdown("---")
@@ -561,7 +563,7 @@ def render_app():
                         "notes": notes
                     }
                     st.session_state["expenses"].insert(0, new_item)
-                    st.session_state["success_message"] = f"✅ Expense '{title}' ({fmt_amt(amount)}) saved successfully!"
+                    st.session_state["saved_expense_toast"] = f"🎉 Expense '{title}' ({fmt_amt(amount)}) saved successfully!"
                     st.rerun()
                 else:
                     st.error("Please enter an expense title.")
@@ -649,7 +651,7 @@ def render_app():
                         selected_item["date"] = str(edit_date)
                         selected_item["payment_method"] = edit_payment
                         selected_item["notes"] = edit_notes
-                        st.session_state["success_message"] = f"✅ Expense '{edit_title}' updated successfully!"
+                        st.session_state["saved_expense_toast"] = f"🎉 Expense '{edit_title}' updated successfully!"
                         st.rerun()
         else:
             st.info("No expenses available to edit.")
@@ -666,7 +668,7 @@ def render_app():
             
             if st.button("❌ Confirm Delete", key="btn_confirm_delete", type="primary"):
                 st.session_state["expenses"] = [exp for exp in st.session_state["expenses"] if exp["id"] != selected_id]
-                st.session_state["success_message"] = "✅ Expense deleted successfully!"
+                st.session_state["saved_expense_toast"] = "🎉 Expense deleted successfully!"
                 st.rerun()
         else:
             st.info("No expenses available to delete.")
