@@ -200,6 +200,31 @@ def fmt_amt(amt):
     curr = st.session_state.get("currency_symbol", "₹")
     return f"{curr}{amt:,.2f}"
 
+def get_unread_notifications():
+    notifs = []
+    # 1. Bill Reminders
+    bills = st.session_state.get("bills", [])
+    for b in bills:
+        notifs.append(f"🔔 **Bill Reminder**: `{b['title']}` ({fmt_amt(b['amount'])}) due on **{b['due_date']}**")
+    
+    # 2. Over-Budget Alerts
+    df_exp = pd.DataFrame(st.session_state.get("expenses", []))
+    budgets = st.session_state.get("category_budgets", {})
+    if not df_exp.empty:
+        cat_spend = df_exp.groupby("category")["amount"].sum().to_dict()
+        for cat, limit in budgets.items():
+            spent = cat_spend.get(cat, 0.0)
+            if limit > 0 and (spent / limit) >= 0.8:
+                pct = int((spent / limit) * 100)
+                if pct >= 100:
+                    notifs.append(f"🚨 **Over-Budget Alert**: Category `{cat}` is at **{pct}%** limit ({fmt_amt(spent)} / {fmt_amt(limit)})!")
+                else:
+                    notifs.append(f"⚠️ **Budget Warning**: Category `{cat}` reached **{pct}%** limit ({fmt_amt(spent)} / {fmt_amt(limit)})")
+                    
+    if not notifs:
+        notifs.append("✅ **All clear!** No active bill or budget notifications.")
+    return notifs
+
 def render_top_left_back_arrow():
     b_col1, b_col2 = st.columns([1, 4])
     with b_col1:
@@ -288,15 +313,29 @@ def render_login_page():
 def render_app():
     curr = st.session_state.get("currency_symbol", "₹")
     
-    # TOP HEADER BAR
-    head_col1, head_col2 = st.columns([3, 1])
+    # TOP HEADER BAR WITH NOTIFICATION BELL POPUP
+    head_col1, head_col2, head_col3 = st.columns([2.5, 1.2, 0.8])
     with head_col1:
         st.markdown("<h1 class='main-header'>Expense Tracker</h1>", unsafe_allow_html=True)
         st.markdown(f"Welcome back, **{st.session_state['user_email']}**!", unsafe_allow_html=True)
+    
     with head_col2:
-        curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0)
-        st.session_state["currency_symbol"] = curr_choice.split()[0]
+        # TOP RIGHT NOTIFICATION BELL POPOVER
+        notif_list = get_unread_notifications()
+        active_notif_count = len([n for n in notif_list if "All clear" not in n])
+        bell_label = f"🔔 ({active_notif_count})" if active_notif_count > 0 else "🔔"
         
+        with st.popover(bell_label, use_container_width=True):
+            st.subheader("🔔 Notification Center")
+            st.caption(f"Active alerts for {st.session_state['user_email']}")
+            st.markdown("---")
+            for item in notif_list:
+                st.markdown(f"- {item}")
+                
+        curr_choice = st.selectbox("Currency", ["₹ (INR)", "$ (USD)", "€ (EUR)", "£ (GBP)"], index=0, label_visibility="collapsed")
+        st.session_state["currency_symbol"] = curr_choice.split()[0]
+
+    with head_col3:
         if st.button("🚪 Sign Out", key="top_logout", use_container_width=True):
             st.session_state["show_logout_confirm"] = True
 
