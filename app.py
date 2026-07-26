@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
 import json
-import streamlit.components.v1 as components
 
 # Page Configuration for Streamlit Cloud - Clean Title Expense Tracker
 st.set_page_config(
@@ -171,20 +170,6 @@ def render_bottom_author_footer():
 
 # ==================== SIGN IN / LOGIN PAGE ==================== #
 def render_login_page():
-    # JavaScript snippet to restore login state automatically if tab was closed and re-opened
-    components.html("""
-        <script>
-            try {
-                const savedLoggedIn = localStorage.getItem("et_logged_in");
-                const savedUser = localStorage.getItem("et_user_email");
-                const urlParams = new URLSearchParams(window.parent.location.search);
-                if (savedLoggedIn === "true" && savedUser && !urlParams.get("logged_in")) {
-                    window.parent.location.href = window.parent.location.pathname + "?logged_in=true&user_email=" + encodeURIComponent(savedUser) + "&page=HOME";
-                }
-            } catch(e) { console.log(e); }
-        </script>
-    """, height=0)
-
     curr = st.session_state.get("currency_symbol", "₹")
     st.markdown("<h1 class='main-header' style='text-align: center;'>Expense Tracker</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-header' style='text-align: center;'>Manage your personal expenses, budgets & savings in {curr}</p>", unsafe_allow_html=True)
@@ -213,12 +198,6 @@ def render_login_page():
                         st.query_params["logged_in"] = "true"
                         st.query_params["user_email"] = identity
                         st.query_params["page"] = "HOME"
-                        components.html(f"""
-                            <script>
-                                localStorage.setItem("et_logged_in", "true");
-                                localStorage.setItem("et_user_email", "{identity}");
-                            </script>
-                        """, height=0)
                         st.success("✅ Signed in!")
                         st.rerun()
                     else:
@@ -230,12 +209,6 @@ def render_login_page():
                             st.query_params["logged_in"] = "true"
                             st.query_params["user_email"] = identity
                             st.query_params["page"] = "HOME"
-                            components.html(f"""
-                                <script>
-                                    localStorage.setItem("et_logged_in", "true");
-                                    localStorage.setItem("et_user_email", "{identity}");
-                                </script>
-                            """, height=0)
                             st.success("✅ Signed in!")
                             st.rerun()
                         else:
@@ -250,29 +223,12 @@ def render_login_page():
             st.query_params["logged_in"] = "true"
             st.query_params["user_email"] = "google_user@gmail.com"
             st.query_params["page"] = "HOME"
-            components.html("""
-                <script>
-                    localStorage.setItem("et_logged_in", "true");
-                    localStorage.setItem("et_user_email", "google_user@gmail.com");
-                </script>
-            """, height=0)
             st.rerun()
 
     render_bottom_author_footer()
 
 # ==================== MAIN APPLICATION ==================== #
 def render_app():
-    # JavaScript snippet to sync LocalStorage when in main app
-    user_email_js = st.session_state['user_email']
-    components.html(f"""
-        <script>
-            try {{
-                localStorage.setItem("et_logged_in", "true");
-                localStorage.setItem("et_user_email", "{user_email_js}");
-            }} catch(e) {{}}
-        </script>
-    """, height=0)
-
     curr = st.session_state.get("currency_symbol", "₹")
     
     # TOP HEADER BAR
@@ -296,15 +252,6 @@ def render_app():
                 st.session_state["logged_in"] = False
                 st.session_state["show_logout_confirm"] = False
                 st.query_params.clear()
-                components.html("""
-                    <script>
-                        try {
-                            localStorage.removeItem("et_logged_in");
-                            localStorage.removeItem("et_user_email");
-                            window.parent.location.href = window.parent.location.pathname;
-                        } catch(e) {}
-                    </script>
-                """, height=0)
                 st.rerun()
         with btn_c2:
             if st.button("❌ Cancel", key="confirm_logout_no", use_container_width=True):
