@@ -13,6 +13,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# GOOGLE SITE VERIFICATION STRING FOR HTML FILE & HTML TAG VERIFICATION
+st.markdown("<div style='display:none;'>google-site-verification: googlemnmCH4kXkGOtxmo871ww5SCxMG1n3NQ1HoJ9T4lEuOY.html</div>", unsafe_allow_html=True)
+
 # SEO META TAGS AND STRUCTURED SCHEMA FOR GOOGLE SEARCH INDEXING
 st.markdown("""
     <head>
