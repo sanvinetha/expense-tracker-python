@@ -6,12 +6,35 @@ import json
 import os
 import re
 
+import streamlit.components.v1 as components
+
 # Page Configuration for Streamlit Cloud - Clean Title Expense Tracker
 st.set_page_config(
     page_title="Expense Tracker",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# INJECT GOOGLE TAG DIRECTLY INTO PARENT DOCUMENT HEAD FOR GOOGLE DETECTOR
+components.html("""
+    <script>
+        try {
+            const parentHead = window.parent.document.getElementsByTagName('head')[0];
+            if (!window.parent.document.getElementById('ga-gtag-script')) {
+                const s1 = window.parent.document.createElement('script');
+                s1.id = 'ga-gtag-script';
+                s1.async = true;
+                s1.src = 'https://www.googletagmanager.com/gtag/js?id=G-2RDELG8S2S';
+                parentHead.appendChild(s1);
+
+                const s2 = window.parent.document.createElement('script');
+                s2.id = 'ga-gtag-init';
+                s2.text = "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-2RDELG8S2S');";
+                parentHead.appendChild(s2);
+            }
+        } catch(e) {}
+    </script>
+""", height=0)
 
 # GOOGLE SITE VERIFICATION STRING FOR HTML FILE & HTML TAG VERIFICATION
 st.markdown("<div style='display:none;'>google-site-verification: googlemnmCH4kXkGOtxmo871ww5SCxMG1n3NQ1HoJ9T4lEuOY.html</div>", unsafe_allow_html=True)
