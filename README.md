@@ -1,72 +1,58 @@
-# Expense Tracker Python 💰
+# 💰 Expense Tracker - Personal Finance & Budget Management App
 
-A modern, full-featured Python Expense Tracker web application featuring multi-method authentication (Email / Mobile Number & Google Sign-In) and an interactive post-login financial dashboard with 11 core module features.
+![Expense Tracker](https://img.shields.io/badge/Expense_Tracker-Live_App-blue?style=for-the-badge&logo=streamlit)
+![Python](https://img.shields.io/badge/Python-3.10+-green?style=for-the-badge&logo=python)
+![Streamlit](https://img.shields.io/badge/Streamlit-Cloud-FF4B4B?style=for-the-badge&logo=streamlit)
 
----
-
-## 🌟 Key Features Implemented
-
-### 1. 🔐 Multi-Option Authentication Page (Sign-In / Login)
-- **Email ID or Mobile Number Login**: Support for logging in via Mobile Number or Email ID with password/OTP verification.
-- **Google Email ID Sign-In**: "Continue with Google Email ID" OAuth button situated directly below the main sign-in form.
-- **Demo / Guest Access**: Quick one-click guest access for testing.
-
-### 2. 📊 Post-Login Dashboard (Key Feature Modules)
-After successful sign-in, the user is navigated to an interactive dashboard equipped with:
-1. ➕ **Add Expenses**: Form to record title, amount, category, date, payment method, and optional notes.
-2. 🔍 **Search Expenses**: Instant search and filter by keyword, category, and payment method.
-3. 📋 **View Expenses**: Tabular list of all transactions with sorting and quick action buttons.
-4. 💰 **Total Expenses**: Real-time summary cards displaying Total Spend, Total Count, Monthly Spend, and Top Category.
-5. 📊 **Category Report**: Visual progress bars and percentage calculation of spending per category.
-6. ✏️ **Edit Expense**: Modal window to update existing transaction details.
-7. 🗑️ **Delete Expense**: Instant row deletion with confirmation prompt.
-8. 📈 **Chart Analytics**: Interactive Chart.js visualizations including Donut Chart and Monthly Bar Chart.
-9. 📑 **Financial Report**: Formatted summary statement of accounts.
-10. 📥 **Export Summary**: One-click download of records as **CSV** or **JSON**, plus printable summary report.
-11. 📅 **Monthly Expenses**: Historical month-by-month spending logs and itemized averages.
+### 🌐 Official Live Web Application Link
+👉 **[Click Here to Open Expense Tracker Live Website](https://expense-tracker-python.streamlit.app)**
 
 ---
 
-## 🚀 How to Run Locally
-
-1. **Clone the Repository / Open Folder**:
-   ```bash
-   cd expense-tracker-python
-   ```
-
-2. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Run the Application**:
-   ```bash
-   python app.py
-   ```
-
-4. **Access in Browser**:
-   Open [http://127.0.0.1:5000](http://127.0.0.1:5000) in your web browser.
+## 📌 Project Overview
+**Expense Tracker** is a feature-rich, interactive web application built with **Python** and **Streamlit**. It helps users track daily personal expenses, set category monthly budgets, schedule bill payment reminders, calculate net savings, and generate financial report statements.
 
 ---
 
-## 🤝 Contribution Guidelines (Step-by-Step)
+## ✨ Developed and Maintained By
+- 💻 **Hemanth Reddy**: [GitHub Profile](https://github.com/dudipalahemanthreddy2007-cloud?tab=repositories)
+- 💻 **Sanvi Netha**: [GitHub Profile](https://github.com/sanvinetha)
+- 💻 **Srivalli Kakkireni**: [GitHub Profile](https://github.com/srivallikakkireni75)
 
-If you are contributing these changes to [sanvinetha/expense-tracker-python](https://github.com/sanvinetha/expense-tracker-python):
+---
 
-1. **Fork the Repository** on GitHub.
-2. **Clone your Fork**:
-   ```bash
-   git clone https://github.com/<your-username>/expense-tracker-python.git
-   ```
-3. **Create a Feature Branch**:
-   ```bash
-   git checkout -b feature/auth-and-dashboard
-   ```
-4. **Copy the Updated Files** into your repository folder.
-5. **Commit and Push**:
-   ```bash
-   git add .
-   git commit -m "Add authentication page (Email/Mobile/Google) and post-login 11-key-points dashboard"
-   git push origin feature/auth-and-dashboard
-   ```
-6. **Open a Pull Request (PR)** on GitHub targeting the main branch of `sanvinetha/expense-tracker-python`.
+## 🚀 Key Features
+1. **💰 Total Expenses & Financial Health Score**: Real-time spending breakdown and health calculation.
+2. **➕ Add Expenses**: Quickly log title, category, date, payment method, and notes.
+3. **📋 View & Search Expenses**: Filter transactions by keywords, category, or payment method.
+4. **🎯 Budget & Goals**: Monthly spending caps with live over-budget alert notifications.
+5. **💡 Money Saving Recommendations**: Smart advice on cutting non-essential spending.
+6. **💵 Income & Savings Calculator**: Log income sources and monitor net savings.
+7. **🔔 Subscription & Bill Payment Reminders**: Schedule recurring bill payments.
+8. **📊 Category Pie Charts & Analytics**: Interactive Plotly visual charts.
+9. **📑 Financial Reports & Statements**: Generate category summary statements.
+10. **📥 CSV & JSON Export**: Download expense summaries for offline accounting.
+
+---
+
+## 🔧 Installation & Local Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/sanvinetha/expense-tracker-python.git
+
+# 2. Navigate to project folder
+cd expense-tracker-python
+
+# 3. Install required Python dependencies
+pip install -r requirements.txt
+
+# 4. Run the Streamlit Application
+streamlit run app.py
+```
+
+---
+
+## 🌐 Search Engine Information
+- **Live URL**: https://expense-tracker-python.streamlit.app
+- **License**: MIT Open Source
