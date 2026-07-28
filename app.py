@@ -16,6 +16,7 @@ st.set_page_config(
 # SEO META TAGS AND STRUCTURED SCHEMA FOR GOOGLE SEARCH INDEXING
 st.markdown("""
     <head>
+        <meta name="google-site-verification" content="mnmCH4kXkGOtxmo871ww5SCxMG1n3NQ1HoJ9T4lEuOY" />
         <title>Expense Tracker - Track Expenses, Budgets & Savings Online</title>
         <meta name="description" content="Free online Expense Tracker app developed by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni. Easily track monthly expenses, set category budgets, schedule bill reminders, and manage personal savings." />
         <meta name="keywords" content="Expense Tracker, Personal Finance App, Budget Manager, Expense Manager, Streamlit Expense Tracker, Hemanth Reddy, Sanvi Netha, Srivalli Kakkireni" />
