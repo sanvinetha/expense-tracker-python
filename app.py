@@ -19,6 +19,14 @@ st.markdown("<div style='display:none;'>google-site-verification: googlemnmCH4kX
 # SEO META TAGS AND STRUCTURED SCHEMA FOR GOOGLE SEARCH INDEXING
 st.markdown("""
     <head>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-2RDELG8S2S"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-2RDELG8S2S');
+        </script>
         <meta name="google-site-verification" content="mnmCH4kXkGOtxmo871ww5SCxMG1n3NQ1HoJ9T4lEuOY" />
         <title>Expense Tracker - Track Expenses, Budgets & Savings Online</title>
         <meta name="description" content="Free online Expense Tracker app developed by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni. Easily track monthly expenses, set category budgets, schedule bill reminders, and manage personal savings." />
