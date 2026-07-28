@@ -13,6 +13,37 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# SEO META TAGS AND STRUCTURED SCHEMA FOR GOOGLE SEARCH INDEXING
+st.markdown("""
+    <head>
+        <title>Expense Tracker - Track Expenses, Budgets & Savings Online</title>
+        <meta name="description" content="Free online Expense Tracker app developed by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni. Easily track monthly expenses, set category budgets, schedule bill reminders, and manage personal savings." />
+        <meta name="keywords" content="Expense Tracker, Personal Finance App, Budget Manager, Expense Manager, Streamlit Expense Tracker, Hemanth Reddy, Sanvi Netha, Srivalli Kakkireni" />
+        <meta name="author" content="Hemanth Reddy, Sanvi Netha, Srivalli Kakkireni" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://expense-tracker-python.streamlit.app" />
+        <meta property="og:title" content="Expense Tracker - Personal Finance & Budget App" />
+        <meta property="og:description" content="Manage your personal expenses, budgets & savings online with Expense Tracker." />
+        <meta property="og:url" content="https://expense-tracker-python.streamlit.app" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Expense Tracker",
+          "url": "https://expense-tracker-python.streamlit.app",
+          "description": "Free online Expense Tracker app developed by Hemanth Reddy, Sanvi Netha, and Srivalli Kakkireni.",
+          "applicationCategory": "FinanceApplication",
+          "operatingSystem": "All",
+          "author": {
+            "@type": "Organization",
+            "name": "Hemanth Reddy, Sanvi Netha, Srivalli Kakkireni"
+          }
+        }
+        </script>
+    </head>
+""", unsafe_allow_html=True)
+
 # Custom CSS for Hiding Streamlit Toolbar (Fork, GitHub, Menu) & Slide Card Styling
 st.markdown("""
     <style>
