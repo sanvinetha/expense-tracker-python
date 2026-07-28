@@ -31,6 +31,11 @@ components.html("""
                 s2.id = 'ga-gtag-init';
                 s2.text = "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-2RDELG8S2S');";
                 parentHead.appendChild(s2);
+
+                const m = window.parent.document.createElement('meta');
+                m.name = 'google-site-verification';
+                m.content = 'mnmCH4kXkGOtxmo871ww5SCxMG1n3NQ1HoJ9T4lEuOY';
+                parentHead.appendChild(m);
             }
         } catch(e) {}
     </script>
